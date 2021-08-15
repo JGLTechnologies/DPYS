@@ -1,0 +1,1 @@
+The goal of dpys is to simplify the discord.py lib so people do not have to spend hours making functions such as a curse filter or a warning system(coming soon). 

@@ -1,0 +1,15 @@
+Metadata-Version: 1.1
+Name: dpys
+Version: 4.2.9
+Summary: A library to simplify discord.py
+Home-page: http://jgltechnologies.com/dpys
+Author: George Luca
+Author-email: fixingg@gmail.com
+License: MIT
+Description: The goal of DPYS is to make basic functionalities that every good bot needs easy to implement for beginners.
+Keywords: discord
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3

@@ -1,0 +1,10 @@
+LICENSE.txt
+README.txt
+setup.py
+dpys/__init__.py
+dpys/utils.py
+dpys.egg-info/PKG-INFO
+dpys.egg-info/SOURCES.txt
+dpys.egg-info/dependency_links.txt
+dpys.egg-info/requires.txt
+dpys.egg-info/top_level.txt
