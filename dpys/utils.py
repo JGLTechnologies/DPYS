@@ -12,6 +12,13 @@ DPYS_DBS = ["warnings.db", "curse.db", "rr.db", "muted.db"]
 
 # utils is not done yet.
 
+async def var_can_be_type(var, type, **kwargs) -> bool:
+    try:
+        type(var)
+    except TypeError:
+        return False
+    return True
+
 class GuildData:
 
     async def curse_set(guild_id : int, dir : str) -> set:

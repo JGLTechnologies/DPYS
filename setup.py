@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 REQUIREMENTS = ['discord.py', 'aiosqlite', 'aiohttp']
 DOCS = "http://jgltechnologies.com/dpys"
-VERSION ="4.2.9"
+VERSION ="4.3.0"
 
 classifiers = [
   'Development Status :: 4 - Beta',
