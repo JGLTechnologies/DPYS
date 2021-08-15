@@ -15,7 +15,7 @@ DPYS_DBS = ["warnings.db", "curse.db", "rr.db", "muted.db"]
 async def var_can_be_type(var, type, **kwargs) -> bool:
     try:
         type(var)
-    except TypeError:
+    except:
         return False
     return True
 
