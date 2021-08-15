@@ -1,3 +1,4 @@
+LICENSE
 LICENSE.txt
 README.txt
 setup.py
