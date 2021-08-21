@@ -6,7 +6,9 @@ import aiohttp
 
 from discord.ext import commands
 from pathlib import Path
-from aiohttp import web
+import uvicorn
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 DPYS_DBS = ["warnings.db", "curse.db", "rr.db", "muted.db"]
 
@@ -84,26 +86,21 @@ class DiscordUtils:
 #         self.keys = set(api_keys)
 #         self.dir = dir
 #         self.port = port
-#         self._loop = asyncio.new_event_loop()
 
-#     routes = web.RouteTableDef()
+#     app = FastAPI()
 
-#     @property
-#     def loop(self):
-#         return self._loop
-
-#     @routes.post("/add_curse")
-#     async def add_curse(self, request) -> web.Response:
+#     @app.post("/add_curse")
+#     async def add_curse(self, request : Request) -> JSONResponse:
 #         os.chdir(self.dir)
 #         data = await request.post()
 #         if request.headers.get("api-key") not in self.keys:
-#             return web.Response(text=json.dumps({"error-codes":"Inavlid api-key", "success":False}), status=401)
+#             return JSONResponse({"error-codes":"Inavlid api-key", "success":False}, status_code=401)
 #         if data.get("guild") is None:
-#             return web.Response(text=json.dumps({"error-codes":"Missing input guild", "success":False}), status=401)
+#             return JSONResponse({"error-codes":"Missing input guild", "success":False}, status_code=401)
 #         if data.get("curse") is None:
-#             return web.Response(text=json.dumps({"error-codes":"Missing input curse", "success":False}), status=401)
+#             return JSONResponse({"error-codes":"Missing input curse", "success":False}, status_code=401)
 #         if self.bot.get_guild(int(data["guild"])) is None:
-#             return web.Response(text=json.dumps({"error-codes":"Invalid guild", "success":False}), status=406)
+#             return JSONResponse({"error-codes":"Invalid guild", "success":False}, status_code=406)
 #         async with aiosqlite.connect("curses.db") as db:
 #             await db.execute(f"""CREATE TABLE if NOT EXISTS curses(
 #             curse TEXT,
@@ -114,22 +111,22 @@ class DiscordUtils:
 #             try:
 #                 await db.execute("INSERT INTO curses (curse,guild) VALUES (?,?)", (str(data["curse"]), str(data["guild"])))
 #                 await db.commit()
-#                 return web.Response(text=json.dumps({"success":True}), status=200)
+#                 return JSONResponse({"success":True}, status_code=200)
 #             except:
-#                 return web.Response(text=json.dumps({"error-codes":"Curse already in list", "success":False}), status=406)
+#                 return JSONResponse({"error-codes":"Curse already in list", "success":False}, status_code=406)
 
-#     @routes.post("/remove_curse")
-#     async def remove_curse(self, request) -> web.Response:
+#     @app.post("/remove_curse")
+#     async def remove_curse(self, request : Request) -> JSONResponse:
 #         os.chdir(self.dir)
 #         data = await request.post()
 #         if request.headers.get("api-key") not in self.keys:
-#             return web.Response(text=json.dumps({"error-codes":"Inavlid api-key", "success":False}), status=401)
+#             return JSONResponse({"error-codes":"Inavlid api-key", "success":False}, status_code=401)
 #         if data.get("guild") is None:
-#             return web.Response(text=json.dumps({"error-codes":"Missing input guild", "success":False}), status=401)
+#             return JSONResponse({"error-codes":"Missing input guild", "success":False}, status_code=401)
 #         if data.get("curse") is None:
-#             return web.Response(text=json.dumps({"error-codes":"Missing input curse", "success":False}), status=401)
+#             return JSONResponse({"error-codes":"Missing input curse", "success":False}, status_code=401)
 #         if self.bot.get_guild(int(data["guild"])) is None:
-#             return web.Response(text=json.dumps({"error-codes":"Invalid guild", "success":False}), status=406)
+#             return JSONResponse({"error-codes":"Invalid guild", "success":False}, status_code=406)
 #         async with aiosqlite.connect("curses.db") as db:
 #             await db.execute(f"""CREATE TABLE if NOT EXISTS curses(
 #             curse TEXT,
@@ -138,16 +135,16 @@ class DiscordUtils:
 #             )""")
 #             await db.commit()
 #             if str(data["curse"]) not in GuildData.curse_set():
-#                 return web.Response(text=json.dumps({"error-codes":"Curse not in list", "success":False}), status=404)
+#                 return JSONResponse({"error-codes":"Curse not in list", "success":False}, status_code=404)
 #             await db.execute("DELETE FROM curses WHERE curse = ? and guild = ?", (str(data["curse"]), str(data["guild"])))
 #             await db.commit()
-#             return web.Response(text=json.dumps({"success":True}), status=200)
+#             return JSONResponse({"success":True}, status_code=200)
 
 #     async def run_api(self) -> None:
-#         app = web.Application()
-#         app.add_routes(self.routes)
-#         runner = web.AppRunner(app)
-#         await runner.setup()
-#         site = web.TCPSite(runner, port=self.port)
-#         await site.start()
+#         config = uvicorn.Config('utils:app', port=self.port, workers=self.workers, host="0.0.0.0")
+#         server = uvicorn.Server(config)
+#         await server.serve()
+
+#     def run_app_sync(self):
+#         uvicorn.run(self.app, port=self.port, host="0.0.0.0")
 
