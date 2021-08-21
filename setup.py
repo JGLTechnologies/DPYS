@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 REQUIREMENTS = ['discord.py', 'aiosqlite', 'aiohttp']
-DOCS = "http://jgltechnologies.com/dpys"
+DOCS = "https://jgltechnologies.com/dpys"
 VERSION ="4.3.1"
 
 classifiers = [
