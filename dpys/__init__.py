@@ -210,18 +210,17 @@ class admin:
         await member.unban()
 
     async def unban(ctx, member):
-        banned_users = await ctx.guild.bans()
-        member_name, member_discriminator = member.split('#')
-        for ban_entry in banned_users: 
-            user = ban_entry.user
-            if (user.name, user.discriminator) == (member_name, member_discriminator):
-                await ctx.guild.unban(user)
-                embed = discord.Embed(color = RED, description = f"**Unbanned {member}.**")
-                await ctx.send(embed=embed, delete_after=7)
-            else:
-                embed = discord.Embed(color = RED, description = f"**{member} is not banned.**")
-                await ctx.send(embed=embed, delete_after=5)
-                break
+        member_split = member.split("#")
+        if await utils.var_can_be_type(member, int):
+            ban = [ban for ban in ctx.guild.bans() if ban.user.id == int(member)]
+        ban = [ban for ban in ctx.guild.bans() if ban.user.discriminator == member_split[1] and ban.user.name == member_split[0]]
+        try:
+            await ctx.guild.unban(ban.user)
+            embed = discord.Embed(color = RED, description = f"**Unbanned {member}.**")
+            await ctx.send(embed=embed, delete_after=7)
+        except:
+            embed = discord.Embed(color = RED, description = f"**{member} is not banned.**")
+            await ctx.send(embed=embed, delete_after=5)
 class curse:
 
     async def add_banned_word(ctx, word, dir):
