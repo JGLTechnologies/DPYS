@@ -37,7 +37,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "4.3.6"
+version = "4.3.7"
 
 print("""
 ===========================================================================================
@@ -210,19 +210,19 @@ class admin:
         await member.unban()
 
     async def unban(ctx, member):
-        member_split = member.split("#")
         bans = await ctx.guild.bans()
         if await utils.var_can_be_type(member, int):
             ban = [ban for ban in bans if ban.user.id == int(member)]
         else:
-            ban = [ban for ban in bans if ban.user.discriminator == member_split[1] and ban.user.name == member_split[0]]
-        try:
-            await ctx.guild.unban(ban.user)
-            embed = discord.Embed(color = RED, description = f"**Unbanned {member}.**")
-            await ctx.send(embed=embed, delete_after=7)
-        except:
+            name,discrim = member.split("#")
+            ban = [ban for ban in bans if ban.user.discriminator == discrim and ban.user.name == name]
+        if ban == []:
             embed = discord.Embed(color = RED, description = f"**{member} is not banned.**")
             await ctx.send(embed=embed, delete_after=5)
+            return
+        await ctx.guild.unban(ban[0].user)
+        embed = discord.Embed(color = RED, description = f"**Unbanned {member}.**")
+        await ctx.send(embed=embed, delete_after=7)
 class curse:
 
     async def add_banned_word(ctx, word, dir):
