@@ -209,8 +209,10 @@ class admin:
             await ctx.send(embed=embed, delete_after=7)
         await member.unban()
 
-    async def unban(ctx, member: str):
+    async def unban(ctx, member):
         member_split = member.split("#")
+        if await utils.var_can_be_type(member, int):
+            ban = [ban for ban in ctx.guild.bans() if ban.user.id == int(member)]
         ban = [ban for ban in ctx.guild.bans() if ban.user.discriminator == member_split[1] and ban.user.name == member_split[0]]
         try:
             await ctx.guild.unban(ban.user)
