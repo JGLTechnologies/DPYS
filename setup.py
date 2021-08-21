@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-REQUIREMENTS = ['discord.py', 'aiosqlite', 'aiohttp']
+REQUIREMENTS = ['discord.py', 'aiosqlite', 'aiohttp', 'fastapi', 'uvicorn', 'aiofiles', 'pydantic']
 DOCS = "http://jgltechnologies.com/dpys"
 VERSION ="4.3.1"
 
