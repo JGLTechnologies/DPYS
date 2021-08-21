@@ -37,7 +37,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "4.3.5"
+version = "4.3.6"
 
 print("""
 ===========================================================================================
@@ -211,10 +211,11 @@ class admin:
 
     async def unban(ctx, member):
         member_split = member.split("#")
+        bans = await ctx.guild.bans()
         if await utils.var_can_be_type(member, int):
-            bans = await ctx.guild.bans()
             ban = [ban for ban in bans if ban.user.id == int(member)]
-        ban = [ban for ban in ctx.guild.bans() if ban.user.discriminator == member_split[1] and ban.user.name == member_split[0]]
+        else:
+            ban = [ban for ban in bans if ban.user.discriminator == member_split[1] and ban.user.name == member_split[0]]
         try:
             await ctx.guild.unban(ban.user)
             embed = discord.Embed(color = RED, description = f"**Unbanned {member}.**")
