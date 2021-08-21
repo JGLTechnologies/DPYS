@@ -3,4 +3,4 @@ Change Log
 
 4.3.2 (8/13/2021)
 ===============================================================================================
-fixed small problem with rr class
+changed unban function to allow it and username#discriminator
