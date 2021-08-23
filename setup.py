@@ -11,7 +11,7 @@ REQUIREMENTS = [
     "python-multipart",
 ]
 DOCS = "https://jgltechnologies.com/dpys"
-VERSION = "4.3.8a"
+VERSION = "4.3.8"
 
 classifiers = [
     "Development Status :: 4 - Beta",
