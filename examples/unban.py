@@ -11,3 +11,5 @@ async def unban(ctx, member):
     # It will throw an error you input something like nkjahsdklj
     # It's your job to make sure they input a member dpys can use
     await dpys.admin.unban(ctx, member)
+    
+client.run(TOKEN)
