@@ -1,8 +1,8 @@
 Metadata-Version: 1.1
 Name: dpys
-Version: 4.3.7
+Version: 4.3.8a0
 Summary: A library to simplify discord.py
-Home-page: http://jgltechnologies.com/dpys
+Home-page: https://jgltechnologies.com/dpys
 Author: George Luca
 Author-email: fixingg@gmail.com
 License: MIT
