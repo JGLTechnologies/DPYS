@@ -46,7 +46,7 @@ print("""
 
 -------------------------------------------------------------------------------------------
 
- We recommend that you read http://jgltechnologies.com/dpys before you use the library.
+ We recommend that you read https://jgltechnologies.com/dpys before you use the library.
  
 ===========================================================================================
 """)
