@@ -26,7 +26,7 @@ async def var_can_be_type(var, type, **kwargs) -> bool:
 
 class GuildData:
     async def curse_set(guild_id: int, dir: str) -> set:
-        asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         curse_set = set()
         async with aiosqlite.connect("curse.db") as db:
             try:
@@ -60,7 +60,7 @@ class BotData:
         return float(round(bot / total, 2))
 
     async def dpys_storage_size(dir: str) -> dict:
-        asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         root_directory = Path(dir)
         size = sum(
             f.stat().st_size
