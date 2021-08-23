@@ -29,6 +29,7 @@ import os
 import discord
 import datetime
 import aiosqlite
+import asyncio
 
 from discord.ext import commands
 from dpys import utils
@@ -37,7 +38,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "4.3.7"
+version = "4.3.8a"
 
 print("""
 ===========================================================================================
@@ -68,7 +69,7 @@ class misc:
         await ctx.send(embed=embed, delete_after=7)
 
     async def clear_data_on_guild_remove(guild, dir):
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         async with aiosqlite.connect("warnings.db") as db:
             try:
                 await db.execute("DELETE FROM tempmute WHERE guild = ?", (str(guild.id),))
@@ -227,7 +228,7 @@ class curse:
 
     async def add_banned_word(ctx, word, dir):
         arg = word
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         word = word.lower()
         guildid = str(ctx.guild.id)
         async with aiosqlite.connect("curse.db") as db:
@@ -262,7 +263,7 @@ class curse:
     async def remove_banned_word(ctx, word, dir):
             async with aiosqlite.connect("curse.db") as db:
                 guildid = str(ctx.guild.id)
-                os.chdir(dir)
+                await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
                 try:
                     word = word.lower()
                     word = word.replace(" ", "")
@@ -293,7 +294,7 @@ class curse:
     async def message_filter(message, dir, admin: int=1):
         if message.author.bot or message.guild is None:
             return
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guildid = str(message.guild.id)
         if admin != 1:
             adminrole = message.guild.get_role(admin)
@@ -326,7 +327,7 @@ class curse:
         message = after
         if message.author.bot or message.guild is None:
             return
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guildid = str(message.guild.id)
         if message.author.bot:
             return
@@ -361,7 +362,7 @@ class curse:
 
     async def clear_words(ctx, dir):
         guildid = str(ctx.guild.id)
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         try:
             async with aiosqlite.connect("curse.db") as db:
                 await db.execute("DELETE FROM curses WHERE guild = ?", (guildid,))
@@ -374,7 +375,7 @@ class curse:
 class mute_on_join:
 
     async def mute_add(guild, member, dir):
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guildid = str(guild.id)
         member = str(member.id)
         try:
@@ -392,7 +393,7 @@ class mute_on_join:
     async def mute_remove(guild, member, dir):
         member = str(member.id)
         guildid = str(guild.id)
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         try:
             async with aiosqlite.connect("muted.db") as db:
                 await db.execute("DELETE FROM muted WHERE name = ? and guild = ?", (member,guildid))
@@ -406,7 +407,7 @@ class mute_on_join:
         muted_role = member.guild.get_role(role)
         if not isinstance(muted_role, discord.Role):
             return
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         member = str(member.id)
         try:
             async with aiosqlite.connect("muted.db") as db:
@@ -418,7 +419,7 @@ class mute_on_join:
             pass
 
     async def manual_unmute_check(after, roleid, dir):
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         if after.bot:
             return
         guildid = str(after.guild.id)
@@ -439,7 +440,7 @@ class warnings:
             embed = discord.Embed(color = RED, description = f"**That reason is too long.**")
             await ctx.send(embed=embed, delete_after=5)
             return
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         reason_str = str(reason)
         guildid = str(ctx.guild.id)
         user = member
@@ -462,7 +463,7 @@ class warnings:
                 await ctx.send(embed=embed, delete_after=7)
 
     async def warnings_list(ctx, member, dir):
-            os.chdir(dir)
+            await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
             guildid = str(ctx.guild.id)
             user = member
             member = str(member.id)
@@ -485,7 +486,7 @@ class warnings:
                 await ctx.send(embed=embed, delete_after=5)
 
     async def unwarn(ctx, member, dir, number):
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         user = member
         guild = str(ctx.guild.id)
         member = str(member.id)
@@ -553,7 +554,7 @@ class warnings:
                             await ctx.send(embed=embed, delete_after=5)
 
     async def punish(ctx, member, dir, *args, one=None, two=None, three=None, four=None, five=None, six=None, seven=None, eight=None, nine=None, ten=None, eleven=None, twelve=None, thirteen=None, fourteen=None, fifteen=None, remove_role=None, add_role=None, **kwargs):
-                    os.chdir(dir)
+                    await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
                     memberid = str(member.id)
                     guild = str(ctx.guild.id)
                     async with aiosqlite.connect("warnings.db") as db:
@@ -769,7 +770,7 @@ class warnings:
                                     await mute_on_join.mute_add(ctx.guild, member, dir)
                                     
     async def temp_mute_loop(dir, bot):
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         async with aiosqlite.connect("warnings.db") as db:
             try:
                 async with db.execute("SELECT guild,member,time FROM tempmute") as cursor:
@@ -810,7 +811,7 @@ class warnings:
                 pass
     
     async def temp_ban_loop(dir, bot):
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         async with aiosqlite.connect("warnings.db") as db:
             try:
                 async with db.execute("SELECT guild,member,time FROM tempban") as cursor:
@@ -839,7 +840,7 @@ class warnings:
 class rr:
 
     async def command(ctx, emoji, dir, role, *args, title, description, **kwargs):
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         async with aiosqlite.connect("rr.db") as db:
             await db.execute("""CREATE TABLE IF NOT EXISTS rr(
             msg_id TEXT,
@@ -916,7 +917,7 @@ class rr:
                 await db.commit()
 
     async def add(payload, dir, client):
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         if payload.guild_id is None:
             return
         if payload.member.bot:
@@ -934,7 +935,7 @@ class rr:
                 pass
 
     async def remove(payload, dir, client):
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         if payload.guild_id is None:
             return
         guild = client.get_guild(payload.guild_id)
@@ -953,7 +954,7 @@ class rr:
                 pass
 
     async def clear_all(ctx, dir):
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guild = str(ctx.guild.id)
         async with aiosqlite.connect("rr.db") as db:
             try:
@@ -965,7 +966,7 @@ class rr:
             await ctx.send(embed=embed, delete_after=7)
         
     async def clear_one(ctx, dir, message_id):
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guild = str(ctx.guild.id)
         message_id = str(message_id)
         async with aiosqlite.connect("rr.db") as db:
@@ -982,7 +983,7 @@ class rr:
             await ctx.send(embed=embed, delete_after=7)
 
     async def clear_on_message_delete(message, dir):
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         if message.guild is None:
             return
         guild = str(message.guild.id)
@@ -1000,7 +1001,7 @@ class rr:
                 pass
 
     async def clear_on_channel_delete(channel, dir):
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         channel_id = channel.id
         guild = channel.guild.id
         async with aiosqlite.connect("rr.db") as db:
@@ -1016,7 +1017,7 @@ class rr:
                 pass
 
     async def clear_on_bulk_message_delete(payload, dir):
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         ids = payload.message_ids
         guild = payload.guild_id
         if guild is None:
@@ -1035,7 +1036,7 @@ class rr:
         
     async def display(ctx, dir):
         limit = "limit"
-        os.chdir(dir)
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guild = str(ctx.guild.id)
         async with aiosqlite.connect("rr.db") as db:
             embed = discord.Embed(title="Reaction Roles", color = BLUE)
