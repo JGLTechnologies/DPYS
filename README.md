@@ -6,7 +6,7 @@
 <br>
 All DPYS databases use the [aiosqlite library](https://aiosqlite.omnilib.dev/en/latest/).
 <br>
-Support for DPYS can be give in [our Discord server](https://jgltechnologies.com/discord).
+Support for DPYS can be given [our Discord server](https://jgltechnologies.com/discord).
 <br>
 If you see any problems in the code or want to add a feature, create a pull request on [our Github](https://jgltechnologies.com/dpys/src).
 
@@ -17,7 +17,7 @@ Reaction Role Example
 <br>
 
 ```python
-    import dpys
+import dpys
 from discord.ext import commands
 
 client = commands.AutoShardedBot(command_prefix="!")
