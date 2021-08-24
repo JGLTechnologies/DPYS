@@ -1,7 +1,7 @@
 # DPYS
 
 <a href="https://jgltechnologies.com/discord">
-<img src="https://discord.com/api/guilds/844418702430175272/embed.png"></src>
+<img src="https://discord.com/api/guilds/844418702430175272/embed.png">
 </a>
 
 ## <span style="color:dodgerblue;">The goal of DPYS is to make basic functionalities that every good bot needs easy to implement for beginners.</span>
