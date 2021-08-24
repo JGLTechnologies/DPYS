@@ -13,14 +13,14 @@ If you see any problems in the code or want to add a feature, create a pull requ
 
 <br>
 
-install with pip
+Install with pip
 ```
 python -m pip install dpys
 ```
 
 <br>
 
-install with git
+Install with git
 ```
 python -m pip install git+https://github.com/Nebulizer1213/dpys
 ```
