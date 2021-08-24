@@ -9,7 +9,7 @@
 [DPYS](https://jgltechnologies.com/dpys) is a library that makes functionalites such as warnings, curse filter, reaction roles, anti mute evade, and many more easy to add to your bot.
 All DPYS databases use the [aiosqlite library](https://aiosqlite.omnilib.dev/en/latest/).
 Support for DPYS can be given in [our Discord server](https://jgltechnologies.com/discord).
-If you see any problems in the code or want to add a feature, create a pull request on [our Github](https://jgltechnologies.com/dpys/src).
+If you see any problems in the code or want to add a feature, create a pull request on [our Github repository](https://jgltechnologies.com/dpys/src).
 
 <br>
 
