@@ -27,7 +27,7 @@ python -m pip install git+https://github.com/Nebulizer1213/dpys
 
 <br>
 
-Reaction Role Example
+Reaction role example
 
 <br>
 
