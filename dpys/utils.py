@@ -31,7 +31,8 @@ class GuildData:
         async with aiosqlite.connect("curse.db") as db:
             try:
                 async with db.execute(
-                    "SELECT curse FROM curses WHERE guild = ?", (str(guild_id),)
+                    "SELECT curse FROM curses WHERE guild = ?", (str(
+                        guild_id),)
                 ) as cursor:
                     async for entry in cursor:
                         curse_set.add(entry[0])
