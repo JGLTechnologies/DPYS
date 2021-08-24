@@ -1,6 +1,6 @@
 LICENSE
 LICENSE.txt
-README.txt
+README.md
 setup.py
 dpys/__init__.py
 dpys/utils.py
