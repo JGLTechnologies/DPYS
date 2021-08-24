@@ -31,6 +31,7 @@ setup(
     version=VERSION,
     description="A library to simplify discord.py",
     long_description=get_long_description(),
+    long_description_content_type="text/markdown",
     url=DOCS,
     author="George Luca",
     author_email="fixingg@gmail.com",
