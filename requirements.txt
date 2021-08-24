@@ -1,0 +1,11 @@
+# Main
+discord.py
+aiosqlite
+
+# Utils
+aiohttp
+fastapi
+uvicorn
+aiofiles
+pydantic
+python-multipart

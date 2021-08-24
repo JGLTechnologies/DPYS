@@ -1,5 +1,11 @@
 from setuptools import setup, find_packages
 
+
+def get_long_description():
+    with open("README.md", encoding="utf-8") as file:
+        return file.read()
+
+
 REQUIREMENTS = [
     "discord.py",
     "aiosqlite",
@@ -24,7 +30,7 @@ setup(
     name="dpys",
     version=VERSION,
     description="A library to simplify discord.py",
-    long_description="The goal of DPYS is to make basic functionalities that every good bot needs easy to implement for beginners.",
+    long_description=get_long_description(),
     url=DOCS,
     author="George Luca",
     author_email="fixingg@gmail.com",
