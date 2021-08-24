@@ -1,18 +1,14 @@
+<a href="https://jgltechnologies.com/discord">
+<img src="https://discord.com/api/guilds/844418702430175272/embed.png"></src>
+</a>
+
 # DPYS
 
 ## <span style="color:dodgerblue;">The goal of DPYS is to make basic functionalities that every good bot needs easy to implement for beginners.</span>
 
-<<<<<<< Updated upstream
 [DPYS](https://jgltechnologies.com/dpys) is a library that makes functionalites such as warnings, curse filter, reaction roles, anti mute evade, and many more easy to add to your bot.
 All DPYS databases use the [aiosqlite library](https://aiosqlite.omnilib.dev/en/latest/).
 Support for DPYS can be given [our Discord server](https://jgltechnologies.com/discord).
-=======
-<br>
-
-[DPYS](https://jgltechnologies.com/dpys) is a library that makes functionalites such as warnings, curse filter, reaction roles, anti mute evade, and many more easy to add to your bot.
-All DPYS databases use the [aiosqlite library](https://aiosqlite.omnilib.dev/en/latest/).
-Support for DPYS can be given on [our Discord server](https://jgltechnologies.com/discord).
->>>>>>> Stashed changes
 If you see any problems in the code or want to add a feature, create a pull request on [our Github](https://jgltechnologies.com/dpys/src).
 
 <br>
