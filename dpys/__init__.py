@@ -1,3 +1,6 @@
+# discord.py is no longer maintained. If there is no new official fork by April 2022, most of DPYS will not work anymore.
+
+
 # This library is in development and bugs can be expected. If you encounter any bugs, want to give feedback, or would like to contribute, join our Discord server.
 # https://discord.gg/TUUbzTa3B7
 
@@ -32,7 +35,6 @@ import discord
 import datetime
 import aiosqlite
 import asyncio
-
 from discord.ext import commands
 from dpys import utils
 
@@ -40,19 +42,10 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "4.4.3"
+version = "4.4.4"
 
-print("""
-===========================================================================================
 
- DPYS is a really good library if you know how to use it.
-
--------------------------------------------------------------------------------------------
-
- We recommend that you read https://jgltechnologies.com/dpys before you use the library.
-
-===========================================================================================
-""")
+print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
 
 class misc:
