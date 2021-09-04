@@ -14,6 +14,7 @@ from pydantic import BaseModel
 DPYS_DBS = ["warnings.db", "curse.db", "rr.db", "muted.db"]
 
 # utils is not done yet.
+# Documentation coming soon.
 
 
 async def var_can_be_type(var, type, **kwargs) -> bool:
