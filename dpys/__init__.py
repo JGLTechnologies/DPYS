@@ -857,7 +857,7 @@ class warnings:
                             async with db.execute("SELECT role_remove FROM mute_roles_info WHERE guild = ?", (str(guild.id),)) as role_remove_cursor:
                                 role_remove = await role_remove_cursor.fetchone()
                             if datetime.datetime.now() >= time:
-                                if role_remove != "None" and role_remove != "none":
+                                if role_remove != "None" and role_remove != "None":
                                     try:
                                         await member.add_roles(guild.get_role(int(role_remove)))
                                     except:
