@@ -31,11 +31,11 @@ SOFTWARE.
 # changing it now.
 
 import os
-import discord
+import disnake as discord
 import datetime
 import aiosqlite
 import asyncio
-from discord.ext import commands
+from disnake.ext import commands
 from dpys import utils
 
 
