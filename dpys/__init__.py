@@ -241,7 +241,10 @@ class admin:
         if await utils.var_can_be_type(member, int):
             ban = [ban for ban in bans if ban.user.id == int(member)]
         else:
-            name, discrim = member.split("#")
+            try:
+                name, discrim = member.split("#")
+            except ValueError:
+                raise commands.errors.UserNotFound(member)
             ban = [ban for ban in bans if ban.user.discriminator ==
                    discrim and ban.user.name == name]
         if ban == []:
