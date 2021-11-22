@@ -129,21 +129,3 @@ client.run(TOKEN)
 <br>
 <br>
 
-DPYS also has a utils extension that provides some useful features.
-
-<br>
-
-```python
-from dpys import utils
-import asyncio
-
-async def foo():
-    bar = "bar"
-    result = await utils.var_can_be_type(bar, float)
-    print(result)
-
-asyncio.run(foo())
-
->>> False
-```
-
