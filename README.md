@@ -6,6 +6,9 @@
 
 ## <span style="color:dodgerblue;">The goal of DPYS is to make basic functionalities that every good bot needs easy to implement for beginners.</span>
 
+I have not updated DPYS in a while because I thought that nobody uses it. After checking the statistics for this package I realized hundreds of people have downloaded it.
+During winter break I will be working on fully converting DPYS from discord.py to <a href="https://github.com/DisnakeDev/disnake">disnake</a>. This means we will have support for slash commands. If you are still using discord.py I recomend that you switch to disnake. If you do not want slash commands you can stay on the older versions of DPYS. 
+
 [DPYS](https://jgltechnologies.com/dpys) is a library that makes functionalites such as warnings, curse filter, reaction roles, anti mute evade, and many more easy to add to your bot.
 All DPYS databases use the [aiosqlite library](https://aiosqlite.omnilib.dev/en/latest/).
 Support for DPYS can be given in [our Discord server](https://jgltechnologies.com/discord).
