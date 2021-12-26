@@ -7,7 +7,6 @@ def get_long_description():
 
 
 REQUIREMENTS = [
-    "discord.py",
     "aiosqlite",
     "aiohttp",
     "fastapi",
@@ -15,9 +14,10 @@ REQUIREMENTS = [
     "aiofiles",
     "pydantic",
     "python-multipart",
+    "disnake"
 ]
 DOCS = "https://jgltechnologies.com/dpys"
-VERSION = "4.4.7"
+VERSION = "4.4.8"
 
 classifiers = [
     "Development Status :: 4 - Beta",

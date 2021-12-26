@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: dpys
-Version: 4.4.7
+Version: 4.4.8
 Summary: A library to simplify discord.py
 Home-page: https://jgltechnologies.com/dpys
 Author: George Luca
@@ -23,6 +23,9 @@ License-File: LICENSE.txt
 # DPYS
 
 ## <span style="color:dodgerblue;">The goal of DPYS is to make basic functionalities that every good bot needs easy to implement for beginners.</span>
+
+I have not updated DPYS in a while because I thought that nobody uses it. After checking the statistics for this package I realized hundreds of people have downloaded it.
+During winter break I will be working on fully converting DPYS from discord.py to <a href="https://github.com/DisnakeDev/disnake">disnake</a>. This means we will have support for slash commands. If you are still using discord.py I recomend that you switch to disnake. If you do not want slash commands you can stay on the older versions of DPYS. 
 
 [DPYS](https://jgltechnologies.com/dpys) is a library that makes functionalites such as warnings, curse filter, reaction roles, anti mute evade, and many more easy to add to your bot.
 All DPYS databases use the [aiosqlite library](https://aiosqlite.omnilib.dev/en/latest/).
@@ -146,24 +149,6 @@ client.run(TOKEN)
 
 <br>
 <br>
-
-DPYS also has a utils extension that provides some useful features.
-
-<br>
-
-```python
-from dpys import utils
-import asyncio
-
-async def foo():
-    bar = "bar"
-    result = await utils.var_can_be_type(bar, float)
-    print(result)
-
-asyncio.run(foo())
-
->>> False
-```
 
 
 

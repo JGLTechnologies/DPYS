@@ -4,7 +4,7 @@ import aiosqlite
 import os
 import aiohttp
 
-from discord.ext import commands
+from disnake.ext import commands
 from pathlib import Path
 import uvicorn
 from fastapi import FastAPI, Request

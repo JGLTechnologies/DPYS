@@ -42,7 +42,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "4.4.4"
+version = "4.4.8"
 
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
