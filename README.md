@@ -25,7 +25,7 @@ python -m pip install dpys
 
 Install from github
 ```
-python -m pip install git+https://github.com/Nebulizer1213/dpys
+python -m pip install git+https://github.com/JGLTechnologies/dpys
 ```
 
 <br>
