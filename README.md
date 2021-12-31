@@ -4,7 +4,9 @@
 
 # DPYS
 
-## <span style="color:dodgerblue;">The goal of DPYS is to make basic functionalities that every good bot needs easy to implement for beginners.</span> 
+## <span style="color:dodgerblue;">The goal of DPYS is to make basic functionalities that every good bot needs easy to implement for beginners.</span>
+
+We are currently working on adding support for slash commands with disnake.
 
 [DPYS](https://jgltechnologies.com/dpys) is a library that makes functionalites such as warnings, curse filter, reaction roles, anti mute evade, and many more easy to add to your bot.
 All DPYS databases use the [aiosqlite library](https://aiosqlite.omnilib.dev/en/latest/).
