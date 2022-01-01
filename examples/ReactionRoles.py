@@ -19,7 +19,7 @@ async def role_remove(payload):
 
 
 # Command to list all current reaction roles in the guild.
-@commands.slash_command(name="listrr")
+@client.slash_command(name="listrr")
 @commands.has_role("Staff")
 async def listrr(inter: disnake.MessageCommandInteraction):
     await dpys.rr.display(inter, "Your dir goes here.")
@@ -33,7 +33,7 @@ The id can be found using the above command.
 """
 
 
-@commands.slash_command(name="rrclear")
+@client.slash_command(name="rrclear")
 @commands.has_permissions(administrator=True)
 async def rrclear(inter: disnake.MessageCommandInteraction, id: str = commands.Param(
     description="The id or list of ids of the reaction roles you want to remove. Type all if you want to clear all reaction roles.")):
@@ -79,7 +79,7 @@ Just make sure to separate the emojis and roles with commas and match the positi
 
 
 # Do not type hint disnake.Role for the role argument
-@commands.slash_command(name="rr")
+@client.slash_command(name="rr")
 @commands.has_permissions(administrator=True)
 async def reaction_role_command(inter: disnake.MessageCommandInteraction, emoji: str = commands.Param(
     description="An emoji or list of emojis. Match the position of the emoji in the list to the role that you want in the role list."),
