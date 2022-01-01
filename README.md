@@ -8,14 +8,16 @@
 
 We are currently working on adding support for slash commands with disnake.
 
-[DPYS](https://jgltechnologies.com/dpys) is a library that makes functionalites such as warnings, curse filter, reaction roles, anti mute evade, and many more easy to add to your bot.
-All DPYS databases use the [aiosqlite library](https://aiosqlite.omnilib.dev/en/latest/).
-Support for DPYS can be given in [our Discord server](https://jgltechnologies.com/discord).
-If you see any problems in the code or want to add a feature, create a pull request on [our Github repository](https://jgltechnologies.com/dpys/src).
+[DPYS](https://jgltechnologies.com/dpys) is a library that makes functionalites such as warnings, curse filter, reaction
+roles, anti mute evade, and many more easy to add to your bot. All DPYS databases use
+the [aiosqlite library](https://aiosqlite.omnilib.dev/en/latest/). Support for DPYS can be given
+in [our Discord server](https://jgltechnologies.com/discord). If you see any problems in the code or want to add a
+feature, create a pull request on [our Github repository](https://jgltechnologies.com/dpys/src).
 
 <br>
 
 Install from pypi
+
 ```
 python -m pip install dpys
 ```
@@ -23,6 +25,7 @@ python -m pip install dpys
 <br>
 
 Install from github
+
 ```
 python -m pip install git+https://github.com/JGLTechnologies/dpys
 ```
@@ -35,10 +38,12 @@ Reaction role example
 
 ```python
 import dpys
-from discord.ext import commands
+from disnake.ext import commands
+import disnake
 
 client = commands.AutoShardedBot(command_prefix="!")
 TOKEN = "Your Token"
+
 
 # Adds role on reaction.
 @client.listen("on_raw_reaction_add")
@@ -53,30 +58,29 @@ async def role_remove(payload):
 
 
 # Command to list all current reaction roles in the guild.
-@client.command(name="listrr")
+@commands.slash_command(name="listrr")
 @commands.has_role("Staff")
-async def listrr(ctx):
-    await dpys.rr.display(ctx, "Your dir goes here.")
+async def listrr(inter: disnake.MessageCommandInteraction):
+    await dpys.rr.display(inter, "Your dir goes here.")
 
 
 """
 Command to remove reaction role info from the database. Putting "all" as the id argument will wipe all reaction role data for the guild.
-To remove specific ones put the message id as the id argument. You can put multiple just seperate by commas. Data is automatically wiped when the reaction role is deleted.
+To remove specific ones put the message id as the id argument. You can put multiple just separate by commas. Data is automatically wiped when the reaction role is deleted.
 This will only need to be used if the reaction role was deleted with channel.purge.
 The id can be found using the above command.
 """
 
 
-@client.command(name="rrclear")
+@commands.slash_command(name="rrclear")
 @commands.has_permissions(administrator=True)
-async def rrclear(ctx, *, id):
+async def rrclear(inter: disnake.MessageCommandInteraction, id: str = commands.Param(
+    description="The id or list of ids of the reaction roles you want to remove. Type all if you want to clear all reaction roles.")):
     id = id.lower()
     if id == "all":
-        await dpys.rr.clear_all(ctx, "Your dir goes here.")
-        await ctx.message.delete()
+        await dpys.rr.clear_all(inter, "Your dir goes here.")
     else:
-        await dpys.rr.clear_one(ctx, "Your dir goes here.", id)
-        await ctx.message.delete()
+        await dpys.rr.clear_one(inter, "Your dir goes here.", int(id))
 
 
 # Removes data for a reaction role when its message is deleted. Does not work with cahnnel.purge(). For that you need dpys.rr.clear_on_raw_bulk_message_delete().
@@ -99,29 +103,31 @@ async def rr_clear_on_raw_bulk_message_delete(payload):
 
 # Clears all DPYS data for a guild when it is removed.
 @client.listen("on_guild_remove")
-async def rr_clear_on_guild_remove(guild):
+async def clear_on_guild_remove(guild):
     await dpys.misc.clear_data_on_guild_remove(guild, "Your dir goes here.")
 
 
 """
 The command to create the reaction role.
 It is used like this
-!rr emoji @role <Embed Title> <Embed Description>
+/rr emoji @role <Embed Title> <Embed Description>
 You can make one with multiple emojis and role.
-!rr "emoji1, emoji2" "@role1, @role2" Title Description
-If you don't understand where to use quotes and where not to think about it like this.
-Whenever you add a space the bot thinks you are moving on to the next argument.
-If you want an argument with spaces wrap it in quotes.
-The only argument that does not need quotes if there are spaces is the description bescause it is the last argument.
+/rr emojis: emoji1, emoji2 roles: @role1, @role2 title Description
+Just make sure to separate the emojis and roles with commas and match the position of the roles and emojis.
 """
 
-# Do not type hint discord.Role for the role argument
-@client.command(name="rr", aliases=["reactionrole"])
+
+# Do not type hint disnake.Role for the role argument
+@commands.slash_command(name="rr")
 @commands.has_permissions(administrator=True)
-async def reaction_role_command(ctx, emoji, role, title, *, description):
-    await ctx.message.delete()
+async def reaction_role_command(inter: disnake.MessageCommandInteraction, emoji: str = commands.Param(
+    description="An emoji or list of emojis. Match the position of the emoji in the list to the role that you want in the role list."),
+                                role: str = commands.Param(
+                                    description="a Role or list of roles. Match the position of the role in the list to the emoji that you want in the emoji list."),
+                                title: str = commands.Param(description="The title for the embed"),
+                                description: str = commands.Param(description="The description for the embed")):
     await dpys.rr.command(
-        ctx, emoji, "Your dir goes here.", role, title=title, description=description
+        inter, emoji, "Your dir goes here.", role, title, description
     )
 
 

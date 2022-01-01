@@ -1,5 +1,4 @@
 LICENSE
-LICENSE.txt
 README.md
 setup.py
 dpys/__init__.py

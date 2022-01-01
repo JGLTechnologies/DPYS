@@ -31,26 +31,27 @@ SOFTWARE.
 # changing it now.
 
 import os
+import typing
 import disnake as discord
 import datetime
 import aiosqlite
 import asyncio
 from disnake.ext import commands
+from disnake import MessageCommandInteraction
 from dpys import utils
-
 
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "4.4.8"
-
+version = "5.0.0"
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
 
 class misc:
 
-    async def reload(ctx, bot, cogs, **kwargs):
+    @staticmethod
+    async def reload(inter: MessageCommandInteraction, bot: commands.Bot, cogs: typing.List[str]) -> None:
         if not isinstance(cogs, list):
             raise Exception("cogs must be a list.")
         total = len(cogs)
@@ -61,12 +62,10 @@ class misc:
                 reloaded += 1
             except:
                 continue
-        embed = discord.Embed(
-            color=GREEN,
-            description=f"**Successfully reloaded {reloaded}/{total} extensions.**")
-        await ctx.send(embed=embed, delete_after=7)
+        await inter.response.send_message(f"Successfully reloaded {reloaded}/{total} extensions.", ephemeral=True)
 
-    async def clear_data_on_guild_remove(guild, dir):
+    @staticmethod
+    async def clear_data_on_guild_remove(guild: discord.Guild, dir: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         async with aiosqlite.connect("warnings.db") as db:
             try:
@@ -111,135 +110,100 @@ class misc:
 
 class admin:
 
-    async def mute(ctx, member, *args, role_add=1, role_remove=1, reason=None, **kwargs):
-        if ctx.guild.get_role(role_add) in member.roles:
-            embed = discord.Embed(
-                color=RED,
-                description=f"**{member.name}#{member.discriminator} is already muted.**")
-            await ctx.send(embed=embed, delete_after=5)
+    @staticmethod
+    async def mute(inter: MessageCommandInteraction, member: discord.Member, role_add: int,
+                   role_remove: typing.Optional[int] = None, reason: str = None) -> None:
+        if inter.guild.get_role(role_add) in member.roles:
+            await inter.response.send_message(f"{member.name}#{member.discriminator} is already muted.", ephemeral=True)
             return
-        if len(str(reason)) >= 256:
-            embed = discord.Embed(
-                color=RED, description=f"**That reason is too long.**")
-            await ctx.send(embed=embed, delete_after=5)
-            return
+        if len(str(reason)) > 256:
+            reason = reason[:256]
         else:
-            if not isinstance(ctx.guild.get_role(role_add), discord.Role):
+            if not isinstance(inter.guild.get_role(role_add), discord.Role):
                 return
-            await member.add_roles(ctx.guild.get_role(role_add))
-            if role_remove != 1:
+            await member.add_roles(inter.guild.get_role(role_add))
+            if role_remove is not None:
                 try:
-                    await member.remove_roles(ctx.guild.get_role(role_remove))
+                    await member.remove_roles(inter.guild.get_role(role_remove))
                 except:
                     pass
             if reason is None:
-                embed = discord.Embed(
-                    color=GREEN, description=f"**Muted {member.name}#{member.discriminator}.**")
-                await ctx.send(embed=embed, delete_after=7)
+                await inter.response.send_message(f"Muted {str(member)}.", ephemeral=True)
             else:
-                embed = discord.Embed(
-                    color=GREEN,
-                    description=f"**Muted {member.name}#{member.discriminator}. Reason: {reason}**")
-                await ctx.send(embed=embed, delete_after=7)
+                await inter.response.send_message(f"Muted {member.name}#{member.discriminator}. Reason: {reason}",
+                                                  ephemeral=True)
 
-    async def unmute(ctx, member, *args, role_add=1, role_remove=1, **kwargs):
-        if ctx.guild.get_role(role_remove) not in member.roles:
-            embed = discord.Embed(
-                color=RED,
-                description=f"**{member.name}#{member.discriminator} is not muted.**")
-            await ctx.send(embed=embed, delete_after=5)
+    @staticmethod
+    async def unmute(inter: MessageCommandInteraction, member: discord.Member, role_remove: int,
+                     role_add: typing.Optional[int] = None) -> None:
+        if inter.guild.get_role(role_remove) not in member.roles:
+            await inter.response.send_message(f"{member.name}#{member.discriminator} is not muted.", ephemeral=True)
             return
         else:
-            if not isinstance(ctx.guild.get_role(role_remove), discord.Role):
+            if not isinstance(inter.guild.get_role(role_remove), discord.Role):
                 return
-            await member.remove_roles(ctx.guild.get_role(role_remove))
-            if role_add != 1:
+            await member.remove_roles(inter.guild.get_role(role_remove))
+            if role_add is not None:
                 try:
-                    await member.add_roles(ctx.guild.get_role(role_add))
+                    await member.add_roles(inter.guild.get_role(role_add))
                 except:
                     pass
-            embed = discord.Embed(
-                color=GREEN,
-                description=f"**Unmuted {member.name}#{member.discriminator}.**")
-            await ctx.send(embed=embed, delete_after=7)
+            await inter.response.send_message(f"Unmuted {member.name}#{member.discriminator}.", ephemeral=True)
 
-    async def clear(ctx, amount=None):
-        if amount is None:
-            amount = 99999999999999999
-        else:
-            amount = int(amount)
+    @staticmethod
+    async def clear(inter: MessageCommandInteraction, amount: typing.Optional[int] = 99999999999999999) -> int:
         limit = datetime.datetime.now() - datetime.timedelta(weeks=2)
-        await ctx.message.delete()
-        purged = await ctx.channel.purge(limit=amount, after=limit)
+        purged = await inter.channel.purge(limit=amount, after=limit)
         purged = len(purged)
         if purged != 1:
-            embed = discord.Embed(
-                color=GREEN, description=f"**Cleared {purged} messages.**")
+            message = f"Cleared {purged} messages."
         else:
-            embed = discord.Embed(color=GREEN,
-                                  description=f"**Cleared {purged} message.**")
-        await ctx.send(embed=embed, delete_after=5)
+            message = f"Cleared {purged} message."
+        await inter.response.send_message(message, ephemeral=True)
         return purged
 
-    async def kick(ctx, member, reason=None):
-        if len(str(reason)) >= 256:
-            embed = discord.Embed(
-                color=RED, description=f"**That reason is too long.**")
-            await ctx.send(embed=embed, delete_after=5)
-            return
+    @staticmethod
+    async def kick(inter: MessageCommandInteraction, member: discord.Member,
+                   reason: typing.Optional[str] = None) -> None:
+        if len(str(reason)) > 256:
+            reason = reason[:256]
         await member.kick(reason=reason)
         if reason is None:
-            embed = discord.Embed(
-                color=GREEN,
-                description=f"**Kicked {member.name}#{member.discriminator}.**")
-            await ctx.send(embed=embed, delete_after=7)
+            message = f"Kicked {member.name}#{member.discriminator}."
         else:
-            embed = discord.Embed(
-                color=GREEN,
-                description=f"**Kicked {member.name}#{member.discriminator}. Reason: {reason}**")
-            await ctx.send(embed=embed, delete_after=7)
+            message = f"Kicked {member.name}#{member.discriminator}. Reason: {reason}"
+        await inter.response.send_message(message, ephemeral=True)
 
-    async def ban(ctx, member, reason=None):
-        if len(str(reason)) >= 256:
-            embed = discord.Embed(
-                color=RED, description=f"**That reason is too long.**")
-            await ctx.send(embed=embed, delete_after=5)
-            return
+    @staticmethod
+    async def ban(inter: MessageCommandInteraction, member: discord.Member,
+                  reason: typing.Optional[str] = None) -> None:
+        if len(str(reason)) > 256:
+            reason = reason[:256]
         await member.ban(reason=reason)
         if reason is None:
-            embed = discord.Embed(
-                color=GREEN,
-                description=f"**Banned {member.name}#{member.discriminator}.**")
-            await ctx.send(embed=embed, delete_after=7)
+            message = f"Banned {member.name}#{member.discriminator}."
         else:
-            embed = discord.Embed(
-                color=GREEN,
-                description=f"**Banned {member.name}#{member.discriminator}. Reason: {reason}**")
-            await ctx.send(embed=embed, delete_after=7)
+            message = f"Banned {member.name}#{member.discriminator}. Reason: {reason}"
+        await inter.response.send_message(message, ephemeral=True)
 
-    async def softban(ctx, member, reason=None):
-        if len(str(reason)) >= 256:
-            embed = discord.Embed(
-                color=RED, description=f"**That reason is too long.**")
-            await ctx.send(embed=embed, delete_after=5)
-            return
+    @staticmethod
+    async def softban(inter: MessageCommandInteraction, member: discord.Member,
+                      reason: typing.Optional[str] = None) -> None:
+        if len(str(reason)) > 256:
+            reason = reason[:256]
         await member.ban(reason=reason)
         if reason is None:
-            embed = discord.Embed(
-                color=GREEN,
-                description=f"**Soft banned {member.name}#{member.discriminator}.**")
-            await ctx.send(embed=embed, delete_after=7)
+            message = f"Soft banned {member.name}#{member.discriminator}."
         else:
-            embed = discord.Embed(
-                color=GREEN,
-                description=f"**Soft banned {member.name}#{member.discriminator}. Reason: {reason}**")
-            await ctx.send(embed=embed, delete_after=7)
+            message = f"Soft banned {member.name}#{member.discriminator}. Reason: {reason}"
+        await inter.response.send_message(message, ephemeral=True)
         await member.unban()
 
-    async def unban(ctx, member):
-        bans = await ctx.guild.bans()
-        if await utils.var_can_be_type(member, int):
-            ban = [ban for ban in bans if ban.user.id == int(member)]
+    @staticmethod
+    async def unban(inter: MessageCommandInteraction, member: typing.Union[str, int]) -> None:
+        bans = await inter.guild.bans()
+        if isinstance(member, int):
+            ban = [ban for ban in bans if ban.user.id == member]
         else:
             try:
                 name, discrim = member.split("#")
@@ -247,23 +211,20 @@ class admin:
                 raise commands.errors.UserNotFound(member)
             ban = [ban for ban in bans if ban.user.discriminator ==
                    discrim and ban.user.name == name]
-        if ban == []:
-            embed = discord.Embed(
-                color=RED, description=f"**{member} is not banned.**")
-            await ctx.send(embed=embed, delete_after=5)
+        if not ban:
+            await inter.response.send_message(f"{member} is not banned.", ephemeral=True)
             return
-        await ctx.guild.unban(ban[0].user)
-        embed = discord.Embed(color=RED, description=f"**Unbanned {member}.**")
-        await ctx.send(embed=embed, delete_after=7)
+        await inter.guild.unban(ban[0].user)
+        await inter.response.send_message(f"Unbanned {member}.", ephemeral=True)
 
 
 class curse:
 
-    async def add_banned_word(ctx, word, dir):
-        arg = word
+    @staticmethod
+    async def add_banned_word(inter: MessageCommandInteraction, word: str, dir: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         word = word.lower()
-        guildid = str(ctx.guild.id)
+        guildid = str(inter.guild.id)
         async with aiosqlite.connect("curse.db") as db:
             await db.execute(f"""CREATE TABLE if NOT EXISTS curses(
             curse TEXT,
@@ -273,32 +234,22 @@ class curse:
             await db.commit()
             words = word.replace(" ", "")
             words = words.split(",")
-            curses = await utils.GuildData.curse_set(ctx.guild.id, dir)
+            words = set(words)
+            curses = await utils.GuildData.curse_set(inter.guild.id, dir)
             for x in words:
                 if x in curses:
-                    if "," in arg:
-                        msg = f"**One of those words are already in the list.**"
-                    else:
-                        msg = f"**That word is already in the list.**"
-                    embed = discord.Embed(color=RED, description=msg)
-                    await ctx.send(embed=embed, delete_after=5)
+                    msg = f"{x} is already in the list."
+                    await inter.response.send_message(msg, ephemeral=True)
                     return
-                for x in words:
-                    if words.count(x) > 1:
-                        embed = discord.Embed(
-                            color=RED, description="**Words cannot be added twice.**")
-                        await ctx.send(embed=embed, delete_after=5)
-                        return
-                    await db.execute("INSERT INTO curses (curse,guild) VALUES (?,?)", (x, guildid))
-                await db.commit()
-            embed = discord.Embed(color=GREEN,
-                                  description="**Added word(s) the list.**")
-            await ctx.send(embed=embed, delete_after=7)
+                await db.execute("INSERT INTO curses (curse,guild) VALUES (?,?)", (x, guildid))
+            await db.commit()
+            await inter.response.send_message("The word(s) have been added to the list.", ephemeral=True)
 
-    async def remove_banned_word(ctx, word, dir):
+    @staticmethod
+    async def remove_banned_word(inter: MessageCommandInteraction, word: str, dir: str) -> None:
         async with aiosqlite.connect("curse.db") as db:
-            guildid = str(ctx.guild.id)
             await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
+            guildid = str(inter.guild.id)
             try:
                 word = word.lower()
                 word = word.replace(" ", "")
@@ -310,36 +261,32 @@ class curse:
                         for x in word:
                             if x == curse:
                                 in_db = True
-                if in_db == False:
+                if not in_db:
                     if len(word) > 1:
-                        embed = discord.Embed(
-                            color=RED, description="**None of those words are in the list.**")
-                        await ctx.send(embed=embed, delete_after=5)
+                        msg = "None of those words are in the list."
                     else:
-                        embed = discord.Embed(
-                            color=RED, description="**That word is not in the list.**")
-                        await ctx.send(embed=embed, delete_after=5)
+                        msg = "That word is not in the list."
+                    await inter.response.send_message(msg, ephemeral=True)
                     return
                 for x in word:
                     await db.execute("DELETE FROM curses WHERE curse = ? and guild = ?", (x, guildid))
                     await db.commit()
-                embed = discord.Embed(
-                    color=GREEN, description="**Removed word(s) from the list.**")
-                await ctx.send(embed=embed, delete_after=5)
+                await inter.response.send_message("The word(s) have been removed.", ephemeral=True)
             except:
-                embed = discord.Embed(
-                    color=RED, description="**A list has not been created yet.**")
-                await ctx.send(embed=embed, delete_after=5)
+                await inter.response.send_message("A list has not been created yet.", ephemeral=True)
 
-    async def message_filter(message, dir, admin: int = 1):
+    @staticmethod
+    async def message_filter(message: discord.Message, dir: str,
+                             exempt_roles: typing.Optional[typing.List[int]] = None) -> None:
         if message.author.bot or message.guild is None:
             return
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guildid = str(message.guild.id)
-        if admin != 1:
-            adminrole = message.guild.get_role(admin)
-            if adminrole in message.author.roles or message.author.top_role.position > adminrole.position or message.author.bot:
-                return
+        if exempt_roles is not None:
+            for id in exempt_roles:
+                role = message.guild.get_role(id)
+                if role in message.author.roles or message.author.top_role.position > role.position or message.author.bot:
+                    return
             else:
                 try:
                     messagecontent = message.content.lower()
@@ -364,7 +311,9 @@ class curse:
             except:
                 return
 
-    async def message_edit_filter(after, dir, admin: int = 1):
+    @staticmethod
+    async def message_edit_filter(after: discord.Message, dir: str,
+                                  exempt_roles: typing.Optional[typing.List[int]] = None) -> None:
         message = after
         if message.author.bot or message.guild is None:
             return
@@ -373,10 +322,11 @@ class curse:
         if message.author.bot:
             return
         else:
-            if admin != 1:
-                adminrole = message.guild.get_role(admin)
-                if adminrole in message.author.roles or message.author.top_role.position > adminrole.position or message.author.bot:
-                    return
+            if exempt_roles is not None:
+                for id in exempt_roles:
+                    role = message.guild.get_role(id)
+                    if role in message.author.roles or message.author.top_role.position > role.position or message.author.bot:
+                        return
                 else:
                     try:
                         messagecontent = message.content.lower()
@@ -401,32 +351,33 @@ class curse:
                 except:
                     return
 
-    async def clear_words(ctx, dir):
-        guildid = str(ctx.guild.id)
+    @staticmethod
+    async def clear_words(inter: MessageCommandInteraction, dir: str) -> None:
+        guildid = str(inter.guild.id)
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         try:
             async with aiosqlite.connect("curse.db") as db:
                 await db.execute("DELETE FROM curses WHERE guild = ?", (guildid,))
                 await db.commit()
-                await ctx.send("Cleared all curses from this server", delete_after=7)
+                await inter.response.send_message("Cleared all curses from this server", ephemeral=True)
         except:
-            embed = discord.Embed(
-                color=RED,
-                description="**There is not a curse list for this server. Create one by doing !addword followed by a list of words or a single word.**")
-            await ctx.send(embed=embed, delete_after=5)
+            msg = "There is not a curse list for this server."
+            await inter.response.send_message(msg, ephemeral=True)
 
 
 class mute_on_join:
 
-    async def mute_add(guild, member, dir):
+    @staticmethod
+    async def mute_add(guild: discord.Guild, member: discord.Member, dir: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guildid = str(guild.id)
         member = str(member.id)
         try:
             async with aiosqlite.connect("muted.db") as db:
                 await db.execute(f"""CREATE TABLE if NOT EXISTS muted(
-                name TEXT PRIMARY KEY,
-                guild TEXT
+                name TEXT,
+                guild TEXT,
+                PRIMARY KEY (name,guild)
                 )""")
                 await db.commit()
                 await db.execute("INSERT INTO muted (name,guild) VALUES (?,?)", (member, guildid))
@@ -434,7 +385,8 @@ class mute_on_join:
         except:
             pass
 
-    async def mute_remove(guild, member, dir):
+    @staticmethod
+    async def mute_remove(guild: discord.Guild, member: discord.Member, dir: str) -> None:
         member = str(member.id)
         guildid = str(guild.id)
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
@@ -445,7 +397,8 @@ class mute_on_join:
         except:
             pass
 
-    async def mute_on_join(member, role, dir):
+    @staticmethod
+    async def mute_on_join(member: discord.Member, role: int, dir: str):
         user = member
         guildid = str(member.guild.id)
         muted_role = member.guild.get_role(role)
@@ -462,7 +415,8 @@ class mute_on_join:
         except:
             pass
 
-    async def manual_unmute_check(after, roleid, dir):
+    @staticmethod
+    async def manual_unmute_check(after: discord.Member, roleid: int, dir: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         if after.bot:
             return
@@ -479,16 +433,26 @@ class mute_on_join:
 
 
 class warnings:
+    class Punishments:
+        def __init__(self, punishment: str, duration: typing.Optional[int] = None):
+            if punishment.startswith("temp") and duration is None:
+                raise Exception("duration cannot be None for temporary punishments.")
+            if punishment not in ["temp_ban", "temp_mute", "mute", "ban", "kick"]:
+                raise Exception("Invalid punishment.")
+            self.punishment = punishment
+            if punishment.startswith("temp"):
+                self.duration = None
+            else:
+                self.duration = duration
 
-    async def warn(ctx, member, dir, reason=None):
-        if len(str(reason)) >= 256:
-            embed = discord.Embed(
-                color=RED, description=f"**That reason is too long.**")
-            await ctx.send(embed=embed, delete_after=5)
-            return
+    @staticmethod
+    async def warn(inter: MessageCommandInteraction, member: discord.Member, dir: str,
+                   reason: typing.Optional[str] = None) -> None:
+        if len(str(reason)) > 256:
+            reason = reason[:256]
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         reason_str = str(reason)
-        guildid = str(ctx.guild.id)
+        guildid = str(inter.guild.id)
         user = member
         member = str(member.id)
         async with aiosqlite.connect("warnings.db") as db:
@@ -499,26 +463,25 @@ class warnings:
             reason TEXT
             )""")
             await db.commit()
-            await db.execute("INSERT INTO warnings (member_id,guild,reason) VALUES (?,?,?)", (member, guildid, reason_str))
+            await db.execute("INSERT INTO warnings (member_id,guild,reason) VALUES (?,?,?)",
+                             (member, guildid, reason_str))
             await db.commit()
             if reason is None:
-                embed = discord.Embed(
-                    color=GREEN, description=f"**Warned {user.name}#{user.discriminator}.**")
-                await ctx.send(embed=embed, delete_after=7)
+                msg = f"Warned {user.name}#{user.discriminator}."
             else:
-                embed = discord.Embed(
-                    color=GREEN,
-                    description=f"**Warned {user.name}#{user.discriminator}. Reason: {reason}**")
-                await ctx.send(embed=embed, delete_after=7)
+                msg = f"Warned {user.name}#{user.discriminator}. Reason: {reason}"
+            await inter.response.send_message(msg, ephemeral=True)
 
-    async def warnings_list(ctx, member, dir):
+    @staticmethod
+    async def warnings_list(inter: MessageCommandInteraction, member: discord.Memer, dir: str):
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
-        guildid = str(ctx.guild.id)
+        guildid = str(inter.guild.id)
         user = member
         member = str(member.id)
         try:
             async with aiosqlite.connect("warnings.db") as db:
-                async with db.execute("SELECT reason FROM warnings WHERE guild = ? and member_id = ?", (guildid, member)) as cursor:
+                async with db.execute("SELECT reason FROM warnings WHERE guild = ? and member_id = ?",
+                                      (guildid, member)) as cursor:
                     embed = discord.Embed(
                         color=BLUE, title=f"{user.name}#{user.discriminator}'s Warnings")
                     number = 0
@@ -530,47 +493,41 @@ class warnings:
                             inline=False)
                     if number > 0:
                         embed.set_footer(text=f"Total Warnings | {number}")
-                        await ctx.send(embed=embed)
+                        await inter.response.send_message(embed=embed, ephemeral=True)
                     else:
-                        embed = discord.Embed(
-                            color=RED, description=f"**{user.name}#{user.discriminator} has no warnings.**")
-                        await ctx.send(embed=embed, delete_after=5)
+                        await inter.response.send_message(f"{user.name}#{user.discriminator} has no warnings.",
+                                                          ephemeral=True)
         except:
-            embed = discord.Embed(
-                color=RED,
-                description=f"**{user.name}#{user.discriminator} has no warnings.**")
-            await ctx.send(embed=embed, delete_after=5)
+            await inter.response.send_message(f"{user.name}#{user.discriminator} has no warnings.", ephemeral=True)
 
-    async def unwarn(ctx, member, dir, number):
+    @staticmethod
+    async def unwarn(inter: MessageCommandInteraction, member, dir, number: typing.Union[int, str]) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         user = member
-        guild = str(ctx.guild.id)
+        guild = str(inter.guild.id)
         member = str(member.id)
         number = str(number)
         number = number.lower()
         async with aiosqlite.connect("warnings.db") as db:
             try:
-                async with db.execute("SELECT reason FROM warnings WHERE guild = ? and member_id = ?", (guild, member)) as cursor:
+                async with db.execute("SELECT reason FROM warnings WHERE guild = ? and member_id = ?",
+                                      (guild, member)) as cursor:
                     count = 0
                     async for entry in cursor:
                         count += 1
             except:
-                embed = discord.Embed(
-                    color=RED, description=f"**{user.name}#{user.discriminator} has no warnings.**")
-                await ctx.send(embed=embed, delete_after=5)
+                msg = f"{user.name}#{user.discriminator} has no warnings."
+                await inter.response.send_message(msg, ephemeral=True)
                 return
             if count < 1:
-                embed = discord.Embed(
-                    color=RED, description=f"**{user.name}#{user.discriminator} has no warnings.**")
-                await ctx.send(embed=embed, delete_after=5)
+                msg = f"{user.name}#{user.discriminator} has no warnings."
+                await inter.response.send_message(msg, ephemeral=True)
                 return
             if number == "all":
                 await db.execute("DELETE FROM warnings WHERE guild = ? and member_id = ?", (guild, member))
                 await db.commit()
-                embed = discord.Embed(
-                    color=GREEN,
-                    description=f"**Cleared all warnings from {user.name}#{user.discriminator}.**")
-                await ctx.send(embed=embed, delete_after=7)
+                msg = f"Cleared all warnings from {user.name}#{user.discriminator}."
+                await inter.response.send_message(msg, ephemeral=True)
                 return
             else:
                 try:
@@ -580,7 +537,9 @@ class warnings:
                         number_list = list(map(int, number_list))
                         number_list = sorted(number_list, reverse=True)
                         dict = {}
-                        async with db.execute("SELECT id,row_number() OVER (ORDER BY id) FROM warnings WHERE guild = ? and member_id = ?", (guild, member)) as cursor:
+                        async with db.execute(
+                                "SELECT id,row_number() OVER (ORDER BY id) FROM warnings WHERE guild = ? and member_id = ?",
+                                (guild, member)) as cursor:
                             async for entry in cursor:
                                 id, pos = entry
                                 pos = str(pos)
@@ -590,40 +549,36 @@ class warnings:
                         await db.commit()
                         number_list = list(map(str, number_list))
                         number_list = ", ".join(number_list)
-                        await ctx.send(f"Cleared warnings {number_list} from {user.mention}.", delete_after=7)
-                        embed = discord.Embed(
-                            color=GREEN,
-                            description=f"**Cleared warnings {number_list} from .{user.name}#{user.discriminator}.**")
-                        await ctx.send(embed=embed, delete_after=7)
+                        await inter.response.send_message(f"Cleared warnings {number_list} from {str(user)}.",
+                                                          ephemeral=True)
                     else:
                         number = int(number)
                         dict = {}
-                        async with db.execute("SELECT id,row_number() OVER (ORDER BY id) FROM warnings WHERE guild = ? and member_id = ?", (guild, member)) as cursor:
+                        async with db.execute(
+                                "SELECT id,row_number() OVER (ORDER BY id) FROM warnings WHERE guild = ? and member_id = ?",
+                                (guild, member)) as cursor:
                             async for entry in cursor:
                                 id, pos = entry
                                 pos = str(pos)
                                 dict.update({pos: id})
                         await db.execute("DELETE FROM warnings WHERE id = ?", (dict[str(number)],))
                         await db.commit()
-                        embed = discord.Embed(
-                            color=GREEN,
-                            description=f"**Cleared {user.name}#{user.discriminator}'s #{number} warning.**")
-                        await ctx.send(embed=embed, delete_after=7)
+                        msg = f"Cleared {user.name}#{user.discriminator}'s #{number} warning."
+                        await inter.response.send_message(msg, ephemeral=True)
                 except:
                     if number == "all":
-                        embed = discord.Embed(
-                            color=RED, description=f"**{user.name}#{user.discriminator} has no warnings.**")
-                        await ctx.send(embed=embed, delete_after=5)
+                        msg = f"{user.name}#{user.discriminator} has no warnings."
                     else:
-                        embed = discord.Embed(
-                            color=RED,
-                            description=f"**{user.name}#{user.discriminator} does not have that many warnings.**")
-                        await ctx.send(embed=embed, delete_after=5)
+                        msg = f"{user.name}#{user.discriminator} does not have that many warnings."
+                    await inter.response.send_message(msg, ephemeral=True)
 
-    async def punish(ctx, member, dir, *args, one=None, two=None, three=None, four=None, five=None, six=None, seven=None, eight=None, nine=None, ten=None, eleven=None, twelve=None, thirteen=None, fourteen=None, fifteen=None, remove_role=None, add_role=None, **kwargs):
+    @staticmethod
+    async def punish(inter: MessageCommandInteraction, member: discord.Member, dir: str,
+                     punishments: typing.List[Punishments],
+                     add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         memberid = str(member.id)
-        guild = str(ctx.guild.id)
+        guild = str(inter.guild.id)
         async with aiosqlite.connect("warnings.db") as db:
             await db.execute("""CREATE TABLE IF NOT EXISTS tempmute(
                         guild TEXT,
@@ -636,9 +591,11 @@ class warnings:
                         role_remove TEXT
                         )""")
             try:
-                await db.execute("INSERT INTO mute_roles_info (guild,role_add,role_remove) VALUES (?,?,?)", (guild, str(add_role), str(remove_role)))
+                await db.execute("INSERT INTO mute_roles_info (guild,role_add,role_remove) VALUES (?,?,?)",
+                                 (guild, str(add_role), str(remove_role)))
             except:
-                await db.execute("UPDATE mute_roles_info SET role_add = ?, role_remove = ? WHERE guild = ?", (str(add_role), str(remove_role), guild))
+                await db.execute("UPDATE mute_roles_info SET role_add = ?, role_remove = ? WHERE guild = ?",
+                                 (str(add_role), str(remove_role), guild))
             await db.execute("""CREATE TABLE IF NOT EXISTS tempban(
                         guild TEXT,
                         member TEXT,
@@ -646,197 +603,73 @@ class warnings:
                         )""")
             await db.commit()
             try:
-                async with db.execute("SELECT reason FROM warnings WHERE guild = ? and member_id = ?", (guild, memberid)) as cursor:
+                async with db.execute("SELECT reason FROM warnings WHERE guild = ? and member_id = ?",
+                                      (guild, memberid)) as cursor:
                     warnings_number = 0
                     async for _ in cursor:
                         warnings_number += 1
             except:
                 return
-            if warnings_number == 1:
-                warnings_number_str = one
-                message = "You received your first warning."
-            if warnings_number == 2:
-                warnings_number_str = two
-                message = "You received your second warning."
-            if warnings_number == 3:
-                warnings_number_str = three
-                message = "You received your third warning."
-            if warnings_number == 4:
-                warnings_number_str = four
-                message = "You received your fourth warning."
-            if warnings_number == 5:
-                warnings_number_str = five
-                message = "You received your fith warning."
-            if warnings_number == 6:
-                warnings_number_str = six
-                message = "You received your sixth warning."
-            if warnings_number == 7:
-                warnings_number_str = seven
-                message = "You received your seventh warning."
-            if warnings_number == 8:
-                warnings_number_str = eight
-                message = "You received your eighth warning."
-            if warnings_number == 9:
-                warnings_number_str = nine
-                message = "You received your ninth warning."
-            if warnings_number == 10:
-                warnings_number_str = ten
-                message = "You received your tenth warning."
-            if warnings_number == 11:
-                warnings_number_str = eleven
-                message = "You received your eleventh warning."
-            if warnings_number == 12:
-                warnings_number_str = twelve
-                message = "You received your twelfth warning."
-            if warnings_number == 13:
-                warnings_number_str = thirteen
-                message = "You received your thirteenth warning."
-            if warnings_number == 14:
-                warnings_number_str = fourteen
-                message = "You received your fourteenth warning."
-            if warnings_number == 15:
-                warnings_number_str = fifteen
-                message = "You received your fifteenth warning."
-            if warnings_number_str is None:
-                return
-            if "temp" in warnings_number_str:
-                pun_time = warnings_number_str[5:]
-                pun, time = pun_time.split("_")
-                time = time.lower()
-                if pun == "ban":
-                    if "s" in time:
-                        time = int(time[:-1])
-                        await member.ban(reason=message)
-                        time = datetime.datetime.now() + datetime.timedelta(seconds=time)
-                        await db.execute("INSERT INTO tempban (guild,member,time) VALUES (?,?,?)", (guild, memberid, time))
-                        await db.commit()
-                        return
-                    if "m" in time:
-                        time = int(time[:-1])
-                        await member.ban(reason=message)
-                        time = datetime.datetime.now() + datetime.timedelta(minutes=time)
-                        await db.execute("INSERT INTO tempban (guild,member,time) VALUES (?,?,?)", (guild, memberid, time))
-                        await db.commit()
-                        return
-                    if "h" in time:
-                        time = int(time[:-1])
-                        await member.ban(reason=message)
-                        time = datetime.datetime.now() + datetime.timedelta(hours=time)
-                        await db.execute("INSERT INTO tempban (guild,member,time) VALUES (?,?,?)", (guild, memberid, time))
-                        await db.commit()
-                        return
-                    if "d" in time:
-                        time = int(time[:-1])
-                        await member.ban(reason=message)
-                        time = datetime.datetime.now() + datetime.timedelta(days=time)
-                        await db.execute("INSERT INTO tempban (guild,member,time) VALUES (?,?,?)", (guild, memberid, time))
-                        await db.commit()
-                        return
+
+            if punishments[warnings_number - 1].duration is None:
+                if punishments[warnings_number - 1].punishment == "temp_ban":
+                    time = punishments[warnings_number - 1].duration
+                    await member.ban(reason=f"You have received {warnings_number} warnings.")
+                    time = datetime.datetime.now() + datetime.timedelta(seconds=time)
+                    await db.execute("INSERT INTO tempban (guild,member,time) VALUES (?,?,?)",
+                                     (guild, memberid, time))
+                    await db.commit()
+                    return
                 else:
-                    add_role = ctx.guild.get_role(add_role)
+                    add_role = inter.guild.get_role(add_role)
                     if not isinstance(add_role, discord.Role):
                         return
-                    remove_role = ctx.guild.get_role(remove_role)
-                    if not isinstance(remove_role, discord.Role):
-                        remove_role = None
-                    if remove_role is not None:
-                        if add_role in member.roles:
-                            return
-                        else:
-                            if "s" in time:
-                                time = int(time[:-1])
-                                await member.add_roles(add_role)
-                                await member.remove_roles(remove_role)
-                                await mute_on_join.mute_add(ctx.guild, member, dir)
-                                time = datetime.datetime.now() + datetime.timedelta(seconds=time)
-                                await db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)", (guild, memberid, time))
-                                await db.commit()
-                                return
-                            if "m" in time:
-                                time = int(time[:-1])
-                                await member.add_roles(add_role)
-                                await member.remove_roles(remove_role)
-                                await mute_on_join.mute_add(ctx.guild, member, dir)
-                                time = datetime.datetime.now() + datetime.timedelta(minutes=time)
-                                await db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)", (guild, memberid, time))
-                                await db.commit()
-                                return
-                            if "h" in time:
-                                time = int(time[:-1])
-                                await member.add_roles(add_role)
-                                await member.remove_roles(remove_role)
-                                await mute_on_join.mute_add(ctx.guild, member, dir)
-                                time = datetime.datetime.now() + datetime.timedelta(hours=time)
-                                await db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)", (guild, memberid, time))
-                                await db.commit()
-                                return
-                            if "d" in time:
-                                time = int(time[:-1])
-                                await member.add_roles(add_role)
-                                await member.remove_roles(remove_role)
-                                await mute_on_join.mute_add(ctx.guild, member, dir)
-                                time = datetime.datetime.now() + datetime.timedelta(days=time)
-                                await db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)", (guild, memberid, time))
-                                await db.commit()
-                                return
+                    remove_role = inter.guild.get_role(remove_role)
+                    if add_role in member.roles:
+                        return
                     else:
-                        if "s" in time:
-                            time = int(time[:-1])
+                        time = punishments[warnings_number - 1].duration
+                        try:
                             await member.add_roles(add_role)
-                            await mute_on_join.mute_add(ctx.guild, member, dir)
-                            time = datetime.datetime.now() + datetime.timedelta(seconds=time)
-                            await db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)", (guild, memberid, time))
-                            await db.commit()
-                            return
-                        if "m" in time:
-                            time = int(time[:-1])
-                            await member.add_roles(add_role)
-                            await mute_on_join.mute_add(ctx.guild, member, dir)
-                            time = datetime.datetime.now() + datetime.timedelta(minutes=time)
-                            await db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)", (guild, memberid, time))
-                            await db.commit()
-                            return
-                        if "h" in time:
-                            time = int(time[:-1])
-                            await member.add_roles(add_role)
-                            await mute_on_join.mute_add(ctx.guild, member, dir)
-                            time = datetime.datetime.now() + datetime.timedelta(hours=time)
-                            await db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)", (guild, memberid, time))
-                            await db.commit()
-                            return
-                        if "d" in time:
-                            time = int(time[:-1])
-                            await member.add_roles(add_role)
-                            await mute_on_join.mute_add(ctx.guild, member, dir)
-                            time = datetime.datetime.now() + datetime.timedelta(days=time)
-                            await db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)", (guild, memberid, time))
-                            await db.commit()
-                            return
+                        except:
+                            pass
+                        if remove_role is not None:
+                            try:
+                                await member.remove_roles(remove_role)
+                            except:
+                                pass
+                        await mute_on_join.mute_add(inter.guild, member, dir)
+                        time = datetime.datetime.now() + datetime.timedelta(seconds=time)
+                        await db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)",
+                                         (guild, memberid, time))
+                        await db.commit()
+                        return
             else:
-                if warnings_number_str == "ban":
-                    await member.ban(reason=message)
+                if punishments[warnings_number - 1].punishment == "ban":
+                    await member.ban(reason=f"You have received {warnings_number} warnings.")
                     return
-                if warnings_number_str == "kick":
-                    await member.kick(reason=message)
+                if punishments[warnings_number - 1].punishment == "kick":
+                    await member.kick(reason=f"You have received {warnings_number} warnings.")
                     return
-                if warnings_number_str == "mute":
-                    add_role = ctx.guild.get_role(add_role)
-                    try:
-                        remove_role = ctx.guild.get_role(remove_role)
-                    except:
-                        remove_role = None
+                if punishments[warnings_number - 1].punishment == "mute":
+                    add_role = inter.guild.get_role(add_role)
+                    remove_role = inter.guild.get_role(remove_role)
+                    if not isinstance(add_role, discord.Role):
+                        return
                     if remove_role is not None:
-                        if add_role in member.roles:
-                            return
-                        else:
-                            await member.add_roles(add_role)
+                        try:
                             await member.remove_roles(remove_role)
-                            await mute_on_join.mute_add(ctx.guild, member, dir)
-                    else:
-                        await member.add_roles(add_role)
-                        await mute_on_join.mute_add(ctx.guild, member, dir)
+                        except:
+                            pass
+                    if add_role is not None:
+                        try:
+                            await member.add_roles(add_role)
+                        except:
+                            pass
+                    await mute_on_join.mute_add(inter.guild, member, dir)
 
-    async def temp_mute_loop(dir, bot):
+    @staticmethod
+    async def temp_mute_loop(dir: str, bot: commands.Bot) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         async with aiosqlite.connect("warnings.db") as db:
             try:
@@ -851,13 +684,16 @@ class warnings:
                                 continue
                             member = guild.get_member(int(member))
                             if not isinstance(member, discord.Member):
-                                await db.execute("DELETE FROM tempmute WHERE guild = ? and member = ?", (str(guild_id), str(member_id)))
+                                await db.execute("DELETE FROM tempmute WHERE guild = ? and member = ?",
+                                                 (str(guild_id), str(member_id)))
                                 await db.commit()
                                 continue
                             time = datetime.datetime.fromisoformat(time_str)
-                            async with db.execute("SELECT role_add FROM mute_roles_info WHERE guild = ?", (str(guild.id),)) as role_add_cursor:
+                            async with db.execute("SELECT role_add FROM mute_roles_info WHERE guild = ?",
+                                                  (str(guild.id),)) as role_add_cursor:
                                 role_add = await role_add_cursor.fetchone()
-                            async with db.execute("SELECT role_remove FROM mute_roles_info WHERE guild = ?", (str(guild.id),)) as role_remove_cursor:
+                            async with db.execute("SELECT role_remove FROM mute_roles_info WHERE guild = ?",
+                                                  (str(guild.id),)) as role_remove_cursor:
                                 role_remove = await role_remove_cursor.fetchone()
                             if datetime.datetime.now() >= time:
                                 if role_remove != "None" and role_remove != "None":
@@ -869,7 +705,8 @@ class warnings:
                                     await member.remove_roles(guild.get_role(int(role_add)))
                                 except:
                                     pass
-                                await db.execute("DELETE FROM tempmute WHERE guild = ? and member = ? and time = ?", (str(guild.id), str(member.id), time_str))
+                                await db.execute("DELETE FROM tempmute WHERE guild = ? and member = ? and time = ?",
+                                                 (str(guild.id), str(member.id), time_str))
                                 await db.commit()
                                 await mute_on_join.mute_remove(guild, member, dir)
                         except:
@@ -877,7 +714,8 @@ class warnings:
             except:
                 pass
 
-    async def temp_ban_loop(dir, bot):
+    @staticmethod
+    async def temp_ban_loop(dir: str, bot: commands.Bot) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         async with aiosqlite.connect("warnings.db") as db:
             try:
@@ -892,12 +730,14 @@ class warnings:
                                 continue
                             time = datetime.datetime.fromisoformat(time_str)
                             if datetime.datetime.now() >= time:
-                                await db.execute("DELETE FROM tempban WHERE guild = ? and member = ? and time = ?", (str(guild.id), str(member), time_str))
+                                await db.execute("DELETE FROM tempban WHERE guild = ? and member = ? and time = ?",
+                                                 (str(guild.id), str(member), time_str))
                                 await db.commit()
                                 try:
                                     await guild.unban(discord.Object(id=int(member)))
                                 except:
-                                    await db.execute("DELETE FROM tempban WHERE guild = ? and member = ?", (str(guild.id), str(member)))
+                                    await db.execute("DELETE FROM tempban WHERE guild = ? and member = ?",
+                                                     (str(guild.id), str(member)))
                                     await db.commit()
                         except:
                             pass
@@ -907,7 +747,9 @@ class warnings:
 
 class rr:
 
-    async def command(ctx, emoji, dir, role, *args, title, description, **kwargs):
+    @staticmethod
+    async def command(inter: MessageCommandInteraction, emoji: str, dir: str, role: str, title: str,
+                      description: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         async with aiosqlite.connect("rr.db") as db:
             await db.execute("""CREATE TABLE IF NOT EXISTS rr(
@@ -928,7 +770,7 @@ class rr:
                 role = role.replace(" ", "")
                 role_list = role.split(",")
                 if len(role_list) != len(emoji_list):
-                    await ctx.send("Emoji list must be same length as role list.", delete_after=5)
+                    await inter.response.send_message("Emoji list must be same length as role list.", ephemeral=True)
                     return
             if "," in emoji:
                 emoji = emoji.replace(" ", "")
@@ -936,7 +778,7 @@ class rr:
                 role = role.replace(" ", "")
                 role_list = role.split(",")
                 if len(role_list) != len(emoji_list):
-                    await ctx.send("Emoji list must be same length as role list.", delete_after=5)
+                    await inter.response.send_message("Emoji list must be same length as role list.", ephemeral=True)
                     return
                 for x in role_list:
                     role = role.replace("<", "")
@@ -944,65 +786,62 @@ class rr:
                     role = role.replace("@", "")
                     role = role.replace("&", "")
                     try:
-                        if ctx.guild.get_role(int(role)) is None:
-                            embed = discord.Embed(
-                                color=RED, description="**Invalid Role**")
-                            await ctx.send(embed=embed, delete_after=5)
+                        if inter.guild.get_role(int(role)) is None:
+                            await inter.response.send_message("Invalid role", ephemeral=True)
                             return
                     except:
-                        embed = discord.Embed(
-                            color=RED, description="**Invalid Role**")
-                        await ctx.send(embed=embed, delete_after=5)
+                        await inter.response.send_message("Invalid role", ephemeral=True)
                         return
-                msg = await ctx.send(embed=embed)
+                msg = await inter.channel.send(embed=embed)
                 number = 0
                 for x in emoji_list:
                     role = role_list[number]
                     if "@" not in role:
-                        embed = discord.Embed(
-                            color=RED, description="**Invalid Role**")
-                        await ctx.send(embed=embed, delete_after=5)
+                        await inter.response.send_message("Invalid role", ephemeral=True)
+                        await msg.delete()
                         return
+                    role = role.replace("<", "")
+                    role = role.replace(">", "")
+                    role = role.replace("@", "")
+                    role = role.replace("&", "")
                     number += 1
                     await msg.add_reaction(x)
-                    await db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)", (str(msg.id), x, str(role), str(ctx.guild.id), str(ctx.channel.id)))
+                    await db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
+                                     (str(msg.id), x, str(role), str(inter.guild.id), str(inter.channel.id)))
                 await db.commit()
             else:
                 if "@" not in role:
-                    embed = discord.Embed(
-                        color=RED, description="**Invalid Role**")
-                    await ctx.send(embed=embed, delete_after=5)
+                    await inter.response.send_message("Invalid role", ephemeral=True)
                     return
                 role = role.replace("<", "")
                 role = role.replace(">", "")
                 role = role.replace("@", "")
                 role = role.replace("&", "")
                 try:
-                    if ctx.guild.get_role(int(role)) is None:
-                        embed = discord.Embed(
-                            color=RED, description="**Invalid Role**")
-                        await ctx.send(embed=embed, delete_after=5)
+                    if inter.guild.get_role(int(role)) is None:
+                        await inter.response.send_message("Invalid role", ephemeral=True)
                         return
                 except:
-                    embed = discord.Embed(
-                        color=RED, description="**Invalid Role**")
-                    await ctx.send(embed=embed, delete_after=5)
+                    await inter.response.send_message("Invalid role", ephemeral=True)
                     return
-                msg = await ctx.send(embed=embed)
+                msg = await inter.channel.send(embed=embed)
                 await msg.add_reaction(emoji)
-                await db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)", (str(msg.id), emoji, str(role), str(ctx.guild.id), str(ctx.channel.id)))
+                await db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
+                                 (str(msg.id), emoji, str(role), str(inter.guild.id), str(inter.channel.id)))
                 await db.commit()
 
-    async def add(payload, dir, client):
+    @staticmethod
+    async def add(payload: discord.RawReactionActionEvent, dir: str, bot: commands.Bot) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         if payload.guild_id is None:
             return
         if payload.member.bot:
             return
-        guild = client.get_guild(payload.guild_id)
+        guild = bot.get_guild(payload.guild_id)
         async with aiosqlite.connect("rr.db") as db:
             try:
-                async with db.execute("SELECT emoji,role FROM rr WHERE guild = ? and msg_id = ?", (str(guild.id), str(payload.message_id))) as cursor:
+                async with db.execute("SELECT emoji,role FROM rr WHERE guild = ? and msg_id = ?",
+                                      (str(guild.id), str(payload.message_id))) as cursor:
                     async for entry in cursor:
                         emoji, role = entry
                         role = guild.get_role(int(role))
@@ -1011,17 +850,19 @@ class rr:
             except:
                 pass
 
-    async def remove(payload, dir, client):
+    @staticmethod
+    async def remove(payload: discord.RawReactionActionEvent, dir: str, bot: commands.Bot) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         if payload.guild_id is None:
             return
-        guild = client.get_guild(payload.guild_id)
+        guild = bot.get_guild(payload.guild_id)
         member = guild.get_member(payload.user_id)
         if member.bot:
             return
         async with aiosqlite.connect("rr.db") as db:
             try:
-                async with db.execute("SELECT emoji,role FROM rr WHERE guild = ? and msg_id = ?", (str(guild.id), str(payload.message_id))) as cursor:
+                async with db.execute("SELECT emoji,role FROM rr WHERE guild = ? and msg_id = ?",
+                                      (str(guild.id), str(payload.message_id))) as cursor:
                     async for entry in cursor:
                         emoji, role = entry
                         role = guild.get_role(int(role))
@@ -1030,23 +871,23 @@ class rr:
             except:
                 pass
 
-    async def clear_all(ctx, dir):
+    @staticmethod
+    async def clear_all(inter: MessageCommandInteraction, dir: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
-        guild = str(ctx.guild.id)
+        guild = str(inter.guild.id)
         async with aiosqlite.connect("rr.db") as db:
             try:
                 await db.execute("DELETE FROM rr WHERE guild = ?", (guild,))
                 await db.commit()
             except:
                 return
-            embed = discord.Embed(
-                color=GREEN,
-                description="**Deleted all reaction role info for this server.**")
-            await ctx.send(embed=embed, delete_after=7)
+            msg = "Deleted all reaction role info for this server."
+            await inter.response.send_message(msg, ephemeral=True)
 
-    async def clear_one(ctx, dir, message_id):
+    @staticmethod
+    async def clear_one(inter: MessageCommandInteraction, dir: str, message_id: int) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
-        guild = str(ctx.guild.id)
+        guild = str(inter.guild.id)
         message_id = str(message_id)
         async with aiosqlite.connect("rr.db") as db:
             message_id = message_id.replace(" ", "")
@@ -1058,12 +899,11 @@ class rr:
                     break
             await db.commit()
             message_id = ", ".join(message_id)
-            embed = discord.Embed(
-                color=GREEN,
-                description=f"**Delted all reaction role info with message ID(s): {message_id}**")
-            await ctx.send(embed=embed, delete_after=7)
+            msg = f"Deleted all reaction role info with message ID(s): {message_id}"
+            await inter.response.send_message(msg, ephemeral=True)
 
-    async def clear_on_message_delete(message, dir):
+    @staticmethod
+    async def clear_on_message_delete(message: discord.Message, dir: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         if message.guild is None:
             return
@@ -1081,7 +921,8 @@ class rr:
             except:
                 pass
 
-    async def clear_on_channel_delete(channel, dir):
+    @staticmethod
+    async def clear_on_channel_delete(channel: discord.TextChannel, dir: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         channel_id = channel.id
         guild = channel.guild.id
@@ -1091,13 +932,15 @@ class rr:
                     async for entry in cursor:
                         channel = int(entry[0])
                         if channel == channel_id:
-                            await db.execute("DELETE FROM rr WHERE guild = ? and channel = ?", (str(guild), str(channel)))
+                            await db.execute("DELETE FROM rr WHERE guild = ? and channel = ?",
+                                             (str(guild), str(channel)))
                             await db.commit()
                             break
             except:
                 pass
 
-    async def clear_on_bulk_message_delete(payload, dir):
+    @staticmethod
+    async def clear_on_bulk_message_delete(payload: discord.RawBulkMessageDeleteEvent, dir: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         ids = payload.message_ids
         guild = payload.guild_id
@@ -1110,15 +953,17 @@ class rr:
                         msg_id = int(entry[0])
                         for id in ids:
                             if id == msg_id:
-                                await db.execute("DELETE FROM rr WHERE guild = ? and msg_id = ?", (str(guild), str(msg_id)))
+                                await db.execute("DELETE FROM rr WHERE guild = ? and msg_id = ?",
+                                                 (str(guild), str(msg_id)))
                 await db.commit()
             except:
                 pass
 
-    async def display(ctx, dir):
-        limit = "limit"
+    @staticmethod
+    async def display(inter: MessageCommandInteraction, dir: str) -> None:
+        limit = False
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
-        guild = str(ctx.guild.id)
+        guild = str(inter.guild.id)
         async with aiosqlite.connect("rr.db") as db:
             embed = discord.Embed(title="Reaction Roles", color=BLUE)
             try:
@@ -1126,14 +971,16 @@ class rr:
                     number = 0
                     async for entry in cursor:
                         try:
-                            async with db.execute("SELECT role,emoji,channel,msg_id FROM rr WHERE guild = ? and msg_id = ?", (guild, entry[0])) as f:
+                            async with db.execute(
+                                    "SELECT role,emoji,channel,msg_id FROM rr WHERE guild = ? and msg_id = ?",
+                                    (guild, entry[0])) as f:
                                 msg = ""
                                 msg_limit = ""
                                 async for entry in f:
                                     role, emoji, channel, msg_id = entry
-                                    channel = ctx.guild.get_channel(
+                                    channel = inter.guild.get_channel(
                                         int(channel))
-                                    role = ctx.guild.get_role(int(role))
+                                    role = inter.guild.get_role(int(role))
                                     try:
                                         role = f"@{role.name}"
                                     except:
@@ -1149,27 +996,24 @@ class rr:
                             if len(msg) > 1010:
                                 embed.add_field(
                                     name=f"Reaction Role #{number}", inline=False, value=msg_limit)
-                                limit = "True"
+                                limit = True
                             else:
                                 embed.add_field(
                                     name=f"Reaction Role #{number}", inline=False, value=msg)
                         except:
                             continue
                 if number > 0:
-                    if limit == "limit":
+                    if limit:
                         embed.set_footer(
                             text=f"Total Reaction Roles | {number}")
                     else:
                         embed.set_footer(
                             text=f"Total Reaction Roles | {number}")
-                        limit_embed = discord.Embed(
-                            color=RED,
-                            description="One of your reaction roles went over the Discord limit. It will still work perfectly but only essential data will be displayed in this command to save space.")
-                        await ctx.reply(embed=limit_embed, delete_after=7)
-                    await ctx.send(embed=embed)
+                        msg = "One of your reaction roles went over the Discord limit. It will still work perfectly but only essential data will be displayed in this command to save space."
+                        await inter.channel.send(msg, delete_after=10)
+                    await inter.response.send_message(embed=embed)
                 else:
-                    embed = discord.Embed(
-                        color=RED, description="**There are no reaction roles in this server.**")
-                    await ctx.send(embed=embed, delete_after=5)
+                    msg = "There are no reaction roles in this server."
+                    await inter.response.send_message(msg, ephemeral=True)
             except:
                 pass
