@@ -40,7 +40,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.0.7"
+version = "5.0.8"
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
@@ -660,7 +660,8 @@ class warnings:
                     await mute_on_join.mute_add(inter.guild, member, dir)
 
     @staticmethod
-    async def temp_mute_loop(dir: str, bot: commands.Bot, add_role_func: typing.Awaitable, remove_role_func: typing.Optional[typing.Awaitable]) -> None:
+    async def temp_mute_loop(dir: str, bot: commands.Bot, add_role_func: typing.Awaitable,
+                             remove_role_func: typing.Optional[typing.Awaitable] = None) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         async with aiosqlite.connect("warnings.db") as db:
             try:
