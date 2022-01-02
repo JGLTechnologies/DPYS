@@ -40,7 +40,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.1.8"
+version = "5.1.9"
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
@@ -1017,7 +1017,7 @@ class rr:
                     else:
                         embed.set_footer(
                             text=f"Total Reaction Roles | {number}")
-                    await inter.response.send_message(embed=embed)
+                    await inter.response.send_message(embed=embed, ephemeral=True)
                 else:
                     msg = "There are no reaction roles in this server."
                     await inter.response.send_message(msg, ephemeral=True)
