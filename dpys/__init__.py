@@ -40,7 +40,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.1.3"
+version = "5.1.5"
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
@@ -603,7 +603,7 @@ class warnings:
                     return
             except:
                 return
-            if punishments[warnings_number - 1].duration is None:
+            if punishments[warnings_number - 1].duration is not None:
                 if punishments[warnings_number - 1].punishment == "temp_ban":
                     time = punishments[warnings_number - 1].duration
                     await member.ban(reason=f"You have received {warnings_number} warnings.")
