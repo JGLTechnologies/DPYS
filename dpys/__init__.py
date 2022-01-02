@@ -40,7 +40,8 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.1.9"
+version = "5.2.0"
+EPHEMERAL = True
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
@@ -59,7 +60,7 @@ class misc:
                 reloaded += 1
             except:
                 continue
-        await inter.response.send_message(f"Successfully reloaded {reloaded}/{total} extensions.", ephemeral=True)
+        await inter.response.send_message(f"Successfully reloaded {reloaded}/{total} extensions.", ephemeral=EPHEMERAL)
 
     @staticmethod
     async def clear_data_on_guild_remove(guild: discord.Guild, dir: str) -> None:
@@ -111,7 +112,7 @@ class admin:
     async def mute(inter: MessageCommandInteraction, member: discord.Member, role_add: int,
                    role_remove: typing.Optional[int] = None, reason: str = None) -> None:
         if inter.guild.get_role(role_add) in member.roles:
-            await inter.response.send_message(f"{member.name}#{member.discriminator} is already muted.", ephemeral=True)
+            await inter.response.send_message(f"{member.name}#{member.discriminator} is already muted.", ephemeral=EPHEMERAL)
             return
         if len(str(reason)) > 256:
             reason = reason[:256]
@@ -125,16 +126,16 @@ class admin:
                 except:
                     pass
             if reason is None:
-                await inter.response.send_message(f"Muted {str(member)}.", ephemeral=True)
+                await inter.response.send_message(f"Muted {str(member)}.", ephemeral=EPHEMERAL)
             else:
                 await inter.response.send_message(f"Muted {member.name}#{member.discriminator}. Reason: {reason}",
-                                                  ephemeral=True)
+                                                  ephemeral=EPHEMERAL)
 
     @staticmethod
     async def unmute(inter: MessageCommandInteraction, member: discord.Member, role_remove: int,
                      role_add: typing.Optional[int] = None) -> None:
         if inter.guild.get_role(role_remove) not in member.roles:
-            await inter.response.send_message(f"{member.name}#{member.discriminator} is not muted.", ephemeral=True)
+            await inter.response.send_message(f"{member.name}#{member.discriminator} is not muted.", ephemeral=EPHEMERAL)
             return
         else:
             if not isinstance(inter.guild.get_role(role_remove), discord.Role):
@@ -145,7 +146,7 @@ class admin:
                     await member.add_roles(inter.guild.get_role(role_add))
                 except:
                     pass
-            await inter.response.send_message(f"Unmuted {member.name}#{member.discriminator}.", ephemeral=True)
+            await inter.response.send_message(f"Unmuted {member.name}#{member.discriminator}.", ephemeral=EPHEMERAL)
 
     @staticmethod
     async def clear(inter: MessageCommandInteraction, amount: typing.Optional[int] = 99999999999999999) -> int:
@@ -156,7 +157,7 @@ class admin:
             message = f"Cleared {purged} messages."
         else:
             message = f"Cleared {purged} message."
-        await inter.response.send_message(message, ephemeral=True)
+        await inter.response.send_message(message, ephemeral=EPHEMERAL)
         return purged
 
     @staticmethod
@@ -169,7 +170,7 @@ class admin:
             message = f"Kicked {member.name}#{member.discriminator}."
         else:
             message = f"Kicked {member.name}#{member.discriminator}. Reason: {reason}"
-        await inter.response.send_message(message, ephemeral=True)
+        await inter.response.send_message(message, ephemeral=EPHEMERAL)
 
     @staticmethod
     async def ban(inter: MessageCommandInteraction, member: discord.Member,
@@ -181,7 +182,7 @@ class admin:
             message = f"Banned {member.name}#{member.discriminator}."
         else:
             message = f"Banned {member.name}#{member.discriminator}. Reason: {reason}"
-        await inter.response.send_message(message, ephemeral=True)
+        await inter.response.send_message(message, ephemeral=EPHEMERAL)
 
     @staticmethod
     async def softban(inter: MessageCommandInteraction, member: discord.Member,
@@ -193,7 +194,7 @@ class admin:
             message = f"Soft banned {member.name}#{member.discriminator}."
         else:
             message = f"Soft banned {member.name}#{member.discriminator}. Reason: {reason}"
-        await inter.response.send_message(message, ephemeral=True)
+        await inter.response.send_message(message, ephemeral=EPHEMERAL)
         await member.unban()
 
     @staticmethod
@@ -209,10 +210,10 @@ class admin:
             ban = [ban for ban in bans if ban.user.discriminator ==
                    discrim and ban.user.name == name]
         if not ban:
-            await inter.response.send_message(f"{member} is not banned.", ephemeral=True)
+            await inter.response.send_message(f"{member} is not banned.", ephemeral=EPHEMERAL)
             return
         await inter.guild.unban(ban[0].user)
-        await inter.response.send_message(f"Unbanned {member}.", ephemeral=True)
+        await inter.response.send_message(f"Unbanned {member}.", ephemeral=EPHEMERAL)
 
 
 class curse:
@@ -236,11 +237,11 @@ class curse:
             for x in words:
                 if x in curses:
                     msg = f"{x} is already in the list."
-                    await inter.response.send_message(msg, ephemeral=True)
+                    await inter.response.send_message(msg, ephemeral=EPHEMERAL)
                     return
                 await db.execute("INSERT INTO curses (curse,guild) VALUES (?,?)", (x, guildid))
             await db.commit()
-            await inter.response.send_message("The word(s) have been added to the list.", ephemeral=True)
+            await inter.response.send_message("The word(s) have been added to the list.", ephemeral=EPHEMERAL)
 
     @staticmethod
     async def remove_banned_word(inter: MessageCommandInteraction, word: str, dir: str) -> None:
@@ -263,14 +264,14 @@ class curse:
                         msg = "None of those words are in the list."
                     else:
                         msg = "That word is not in the list."
-                    await inter.response.send_message(msg, ephemeral=True)
+                    await inter.response.send_message(msg, ephemeral=EPHEMERAL)
                     return
                 for x in word:
                     await db.execute("DELETE FROM curses WHERE curse = ? and guild = ?", (x, guildid))
                     await db.commit()
-                await inter.response.send_message("The word(s) have been removed.", ephemeral=True)
+                await inter.response.send_message("The word(s) have been removed.", ephemeral=EPHEMERAL)
             except:
-                await inter.response.send_message("A list has not been created yet.", ephemeral=True)
+                await inter.response.send_message("A list has not been created yet.", ephemeral=EPHEMERAL)
 
     @staticmethod
     async def message_filter(message: discord.Message, dir: str,
@@ -356,10 +357,10 @@ class curse:
             async with aiosqlite.connect("curse.db") as db:
                 await db.execute("DELETE FROM curses WHERE guild = ?", (guildid,))
                 await db.commit()
-                await inter.response.send_message("Cleared all curses from this server", ephemeral=True)
+                await inter.response.send_message("Cleared all curses from this server", ephemeral=EPHEMERAL)
         except:
             msg = "There is not a curse list for this server."
-            await inter.response.send_message(msg, ephemeral=True)
+            await inter.response.send_message(msg, ephemeral=EPHEMERAL)
 
 
 class mute_on_join:
@@ -467,7 +468,7 @@ class warnings:
                 msg = f"Warned {user.name}#{user.discriminator}."
             else:
                 msg = f"Warned {user.name}#{user.discriminator}. Reason: {reason}"
-            await inter.response.send_message(msg, ephemeral=True)
+            await inter.response.send_message(msg, ephemeral=EPHEMERAL)
 
     @staticmethod
     async def warnings_list(inter: MessageCommandInteraction, member: discord.Member, dir: str):
@@ -491,12 +492,12 @@ class warnings:
                         number += 1
                     if number > 0:
                         embed.set_footer(text=f"Total Warnings | {number}")
-                        await inter.response.send_message(embed=embed, ephemeral=True)
+                        await inter.response.send_message(embed=embed, ephemeral=EPHEMERAL)
                     else:
                         await inter.response.send_message(f"{user.name}#{user.discriminator} has no warnings.",
-                                                          ephemeral=True)
+                                                          ephemeral=EPHEMERAL)
         except:
-            await inter.response.send_message(f"{user.name}#{user.discriminator} has no warnings.", ephemeral=True)
+            await inter.response.send_message(f"{user.name}#{user.discriminator} has no warnings.", ephemeral=EPHEMERAL)
 
     @staticmethod
     async def unwarn(inter: MessageCommandInteraction, member, dir, number: typing.Union[int, str]) -> None:
@@ -515,17 +516,17 @@ class warnings:
                         count += 1
             except:
                 msg = f"{user.name}#{user.discriminator} has no warnings."
-                await inter.response.send_message(msg, ephemeral=True)
+                await inter.response.send_message(msg, ephemeral=EPHEMERAL)
                 return
             if count < 1:
                 msg = f"{user.name}#{user.discriminator} has no warnings."
-                await inter.response.send_message(msg, ephemeral=True)
+                await inter.response.send_message(msg, ephemeral=EPHEMERAL)
                 return
             if number == "all":
                 await db.execute("DELETE FROM warnings WHERE guild = ? and member_id = ?", (guild, member))
                 await db.commit()
                 msg = f"Cleared all warnings from {user.name}#{user.discriminator}."
-                await inter.response.send_message(msg, ephemeral=True)
+                await inter.response.send_message(msg, ephemeral=EPHEMERAL)
                 return
             else:
                 try:
@@ -548,7 +549,7 @@ class warnings:
                         number_list = list(map(str, number_list))
                         number_list = ", ".join(number_list)
                         await inter.response.send_message(f"Cleared warnings {number_list} from {str(user)}.",
-                                                          ephemeral=True)
+                                                          ephemeral=EPHEMERAL)
                     else:
                         number = int(number)
                         dict = {}
@@ -562,13 +563,13 @@ class warnings:
                         await db.execute("DELETE FROM warnings WHERE id = ?", (dict[str(number)],))
                         await db.commit()
                         msg = f"Cleared {user.name}#{user.discriminator}'s #{number} warning."
-                        await inter.response.send_message(msg, ephemeral=True)
+                        await inter.response.send_message(msg, ephemeral=EPHEMERAL)
                 except:
                     if number == "all":
                         msg = f"{user.name}#{user.discriminator} has no warnings."
                     else:
                         msg = f"{user.name}#{user.discriminator} does not have that many warnings."
-                    await inter.response.send_message(msg, ephemeral=True)
+                    await inter.response.send_message(msg, ephemeral=EPHEMERAL)
 
     @staticmethod
     async def punish(inter: MessageCommandInteraction, member: discord.Member, dir: str,
@@ -762,7 +763,7 @@ class rr:
                 role = role.replace(" ", "")
                 role_list = role.split(",")
                 if len(role_list) != len(emoji_list):
-                    await inter.response.send_message("Emoji list must be same length as role list.", ephemeral=True)
+                    await inter.response.send_message("Emoji list must be same length as role list.", ephemeral=EPHEMERAL)
                     return
                 for role in role_list:
                     role = role.replace("<", "")
@@ -771,17 +772,17 @@ class rr:
                     role = role.replace("&", "")
                     try:
                         if inter.guild.get_role(int(role)) is None:
-                            await inter.response.send_message("Invalid role", ephemeral=True)
+                            await inter.response.send_message("Invalid role", ephemeral=EPHEMERAL)
                             return
                     except:
-                        await inter.response.send_message("Invalid role", ephemeral=True)
+                        await inter.response.send_message("Invalid role", ephemeral=EPHEMERAL)
                         return
                 msg = await inter.channel.send(embed=embed)
                 number = 0
                 for x in emoji_list:
                     role = role_list[number]
                     if "@" not in role:
-                        await inter.response.send_message("Invalid role", ephemeral=True)
+                        await inter.response.send_message("Invalid role", ephemeral=EPHEMERAL)
                         await msg.delete()
                         return
                     role = role.replace("<", "")
@@ -792,11 +793,11 @@ class rr:
                     await msg.add_reaction(x)
                     await db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
                                      (str(msg.id), x, str(role), str(inter.guild.id), str(inter.channel.id)))
-                await inter.response.send_message("Successfully created the reaction role.", ephemeral=True)
+                await inter.response.send_message("Successfully created the reaction role.", ephemeral=EPHEMERAL)
                 await db.commit()
             else:
                 if "@" not in role:
-                    await inter.response.send_message("Invalid role", ephemeral=True)
+                    await inter.response.send_message("Invalid role", ephemeral=EPHEMERAL)
                     return
                 role = role.replace("<", "")
                 role = role.replace(">", "")
@@ -804,17 +805,17 @@ class rr:
                 role = role.replace("&", "")
                 try:
                     if inter.guild.get_role(int(role)) is None:
-                        await inter.response.send_message("Invalid role", ephemeral=True)
+                        await inter.response.send_message("Invalid role", ephemeral=EPHEMERAL)
                         return
                 except:
-                    await inter.response.send_message("Invalid role", ephemeral=True)
+                    await inter.response.send_message("Invalid role", ephemeral=EPHEMERAL)
                     return
                 msg = await inter.channel.send(embed=embed)
                 await msg.add_reaction(emoji)
                 await db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
                                  (str(msg.id), emoji, str(role), str(inter.guild.id), str(inter.channel.id)))
                 await db.commit()
-                await inter.response.send_message("Successfully created the reaction role.", ephemeral=True)
+                await inter.response.send_message("Successfully created the reaction role.", ephemeral=EPHEMERAL)
 
     @staticmethod
     async def add(payload: discord.RawReactionActionEvent, dir: str, bot: commands.Bot) -> None:
@@ -868,7 +869,7 @@ class rr:
             except:
                 return
             msg = "Deleted all reaction role info for this server."
-            await inter.response.send_message(msg, ephemeral=True)
+            await inter.response.send_message(msg, ephemeral=EPHEMERAL)
 
     @staticmethod
     async def clear_one(inter: MessageCommandInteraction, dir: str, message_id: int) -> None:
@@ -886,7 +887,7 @@ class rr:
             await db.commit()
             message_id = ", ".join(message_id)
             msg = f"Deleted all reaction role info with message ID(s): {message_id}"
-            await inter.response.send_message(msg, ephemeral=True)
+            await inter.response.send_message(msg, ephemeral=EPHEMERAL)
 
     @staticmethod
     async def clear_on_message_delete(message: discord.Message, dir: str) -> None:
@@ -1017,9 +1018,9 @@ class rr:
                     else:
                         embed.set_footer(
                             text=f"Total Reaction Roles | {number}")
-                    await inter.response.send_message(embed=embed, ephemeral=True)
+                    await inter.response.send_message(embed=embed, ephemeral=EPHEMERAL)
                 else:
                     msg = "There are no reaction roles in this server."
-                    await inter.response.send_message(msg, ephemeral=True)
+                    await inter.response.send_message(msg, ephemeral=EPHEMERAL)
             except:
                 pass
