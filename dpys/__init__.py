@@ -40,7 +40,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.1.5"
+version = "5.1.6"
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
@@ -675,7 +675,7 @@ class warnings:
                                 await db.execute("DELETE FROM tempmute WHERE guild = ?", (str(guild_id),))
                                 await db.commit()
                                 continue
-                            member = guild.get_member(int(member))
+                            member = guild.get_member(int(member_id))
                             if not isinstance(member, discord.Member):
                                 await db.execute("DELETE FROM tempmute WHERE guild = ? and member = ?",
                                                  (str(guild_id), str(member_id)))
