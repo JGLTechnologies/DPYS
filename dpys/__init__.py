@@ -40,7 +40,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.0.6"
+version = "5.0.7"
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
@@ -582,17 +582,6 @@ class warnings:
                         member TEXT,
                         time DATETIME
                         )""")
-            await db.execute("""CREATE TABLE IF NOT EXISTS mute_roles_info(
-                        guild TEXT PRIMARY KEY,
-                        role_add TEXT,
-                        role_remove TEXT
-                        )""")
-            try:
-                await db.execute("INSERT INTO mute_roles_info (guild,role_add,role_remove) VALUES (?,?,?)",
-                                 (guild, str(add_role), str(remove_role)))
-            except:
-                await db.execute("UPDATE mute_roles_info SET role_add = ?, role_remove = ? WHERE guild = ?",
-                                 (str(add_role), str(remove_role), guild))
             await db.execute("""CREATE TABLE IF NOT EXISTS tempban(
                         guild TEXT,
                         member TEXT,
@@ -671,7 +660,7 @@ class warnings:
                     await mute_on_join.mute_add(inter.guild, member, dir)
 
     @staticmethod
-    async def temp_mute_loop(dir: str, bot: commands.Bot) -> None:
+    async def temp_mute_loop(dir: str, bot: commands.Bot, add_role_func: typing.Awaitable, remove_role_func: typing.Optional[typing.Awaitable]) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         async with aiosqlite.connect("warnings.db") as db:
             try:
@@ -691,12 +680,8 @@ class warnings:
                                 await db.commit()
                                 continue
                             time = datetime.datetime.fromisoformat(time_str)
-                            async with db.execute("SELECT role_add FROM mute_roles_info WHERE guild = ?",
-                                                  (str(guild.id),)) as role_add_cursor:
-                                role_add = await role_add_cursor.fetchone()
-                            async with db.execute("SELECT role_remove FROM mute_roles_info WHERE guild = ?",
-                                                  (str(guild.id),)) as role_remove_cursor:
-                                role_remove = await role_remove_cursor.fetchone()
+                            role_add = await add_role_func(int(guild_id))
+                            role_remove = await remove_role_func(int(guild_id))
                             if datetime.datetime.now() >= time:
                                 if role_remove != "None" and role_remove != "None":
                                     try:
