@@ -9,15 +9,10 @@ def get_long_description():
 REQUIREMENTS = [
     "aiosqlite",
     "aiohttp",
-    "fastapi",
-    "uvicorn",
-    "aiofiles",
-    "pydantic",
-    "python-multipart",
-    "disnake"
+    "disnake",
 ]
 DOCS = "https://jgltechnologies.com/dpys"
-VERSION = "5.1.0"
+VERSION = "5.1.1"
 
 classifiers = [
     "Development Status :: 4 - Beta",
