@@ -40,7 +40,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.1.2"
+version = "5.1.3"
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
@@ -430,7 +430,7 @@ class mute_on_join:
 
 
 class warnings:
-    class Punishments:
+    class Punishment:
         def __init__(self, punishment: str, duration: typing.Optional[int] = None):
             if punishment.startswith("temp") and duration is None:
                 raise Exception("duration cannot be None for temporary punishments.")
@@ -572,7 +572,7 @@ class warnings:
 
     @staticmethod
     async def punish(inter: MessageCommandInteraction, member: discord.Member, dir: str,
-                     punishments: typing.List[Punishments],
+                     punishments: typing.List[Punishment],
                      add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         memberid = str(member.id)
