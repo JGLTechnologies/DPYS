@@ -40,7 +40,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.0.5"
+version = "5.0.6"
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
@@ -437,7 +437,7 @@ class warnings:
             if punishment not in ["temp_ban", "temp_mute", "mute", "ban", "kick"]:
                 raise Exception("Invalid punishment.")
             self.punishment = punishment
-            if punishment.startswith("temp"):
+            if not punishment.startswith("temp"):
                 self.duration = None
             else:
                 self.duration = duration
