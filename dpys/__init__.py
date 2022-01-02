@@ -40,7 +40,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.1.6"
+version = "5.1.8"
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
@@ -918,6 +918,24 @@ class rr:
                     async for entry in cursor:
                         channel = int(entry[0])
                         if channel == channel_id:
+                            await db.execute("DELETE FROM rr WHERE guild = ? and channel = ?",
+                                             (str(guild), str(channel)))
+                            await db.commit()
+                            break
+            except:
+                pass
+
+    @staticmethod
+    async def clear_on_thread_delete(thread: discord.Thread, dir: str) -> None:
+        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
+        thread_id = thread.id
+        guild = thread.guild.id
+        async with aiosqlite.connect("rr.db") as db:
+            try:
+                async with db.execute("SELECT channel FROM rr WHERE guild = ?", (str(guild),)) as cursor:
+                    async for entry in cursor:
+                        channel = int(entry[0])
+                        if channel == thread_id:
                             await db.execute("DELETE FROM rr WHERE guild = ? and channel = ?",
                                              (str(guild), str(channel)))
                             await db.commit()
