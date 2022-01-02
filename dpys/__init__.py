@@ -40,7 +40,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.0.8"
+version = "5.1.0"
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
@@ -480,14 +480,15 @@ class warnings:
                 async with db.execute("SELECT reason FROM warnings WHERE guild = ? and member_id = ?",
                                       (guildid, member)) as cursor:
                     embed = discord.Embed(
-                        color=BLUE, title=f"{user.name}#{user.discriminator}'s Warnings")
+                        color=BLUE, title=f"{user.name}#{user.discriminator}'s 5 Most Recent Warnings")
                     number = 0
                     async for entry in cursor:
+                        if number < 5:
+                            embed.add_field(
+                                name=f"#{number} warning",
+                                value=f"Reason: {entry[0]}",
+                                inline=False)
                         number += 1
-                        embed.add_field(
-                            name=f"#{number} warning",
-                            value=f"Reason: {entry[0]}",
-                            inline=False)
                     if number > 0:
                         embed.set_footer(text=f"Total Warnings | {number}")
                         await inter.response.send_message(embed=embed, ephemeral=True)
@@ -947,7 +948,7 @@ class rr:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guild = str(inter.guild.id)
         async with aiosqlite.connect("rr.db") as db:
-            embed = discord.Embed(title="Reaction Roles", color=BLUE)
+            embed = discord.Embed(title="5 Most Recent Reaction Roles", color=BLUE)
             try:
                 async with db.execute("SELECT msg_id FROM rr WHERE guild = ? GROUP BY msg_id", (guild,)) as cursor:
                     number = 0
@@ -975,14 +976,15 @@ class rr:
                                 msg_limit += f"Channel: {channel} \nMessage ID: {msg_id}\n"
                                 msg += f"Channel: {channel} \nMessage ID: {msg_id}\n"
                                 number += 1
-                            if len(msg) > 1010:
-                                embed.add_field(
-                                    name=f"Reaction Role #{number}", inline=False, value=msg_limit)
-                                limit = True
-                            else:
-                                limit = False
-                                embed.add_field(
-                                    name=f"Reaction Role #{number}", inline=False, value=msg)
+                            if number < 6:
+                                if len(msg) > 1010:
+                                    embed.add_field(
+                                        name=f"Reaction Role #{number}", inline=False, value=msg_limit)
+                                    limit = True
+                                else:
+                                    limit = False
+                                    embed.add_field(
+                                        name=f"Reaction Role #{number}", inline=False, value=msg)
                         except:
                             continue
                 if number > 0:
