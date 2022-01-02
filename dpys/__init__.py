@@ -43,7 +43,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.0.0"
+version = "5.0.2"
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
@@ -473,7 +473,7 @@ class warnings:
             await inter.response.send_message(msg, ephemeral=True)
 
     @staticmethod
-    async def warnings_list(inter: MessageCommandInteraction, member: discord.Memer, dir: str):
+    async def warnings_list(inter: MessageCommandInteraction, member: discord.Member, dir: str):
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guildid = str(inter.guild.id)
         user = member
@@ -611,6 +611,11 @@ class warnings:
             except:
                 return
 
+            try:
+                if punishments[warnings_number - 1] is None:
+                    return
+            except:
+                return
             if punishments[warnings_number - 1].duration is None:
                 if punishments[warnings_number - 1].punishment == "temp_ban":
                     time = punishments[warnings_number - 1].duration

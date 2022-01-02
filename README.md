@@ -75,7 +75,7 @@ The id can be found using the above command.
 @commands.slash_command(name="rrclear")
 @commands.has_permissions(administrator=True)
 async def rrclear(inter: disnake.MessageCommandInteraction, id: str = commands.Param(
-    description="The id or list of ids of the reaction roles you want to remove. Type all if you want to clear all reaction roles.")):
+    description="The id or list of ids of the reaction roles you want to remove")):
     id = id.lower()
     if id == "all":
         await dpys.rr.clear_all(inter, "Your dir goes here.")
@@ -121,9 +121,9 @@ Just make sure to separate the emojis and roles with commas and match the positi
 @commands.slash_command(name="rr")
 @commands.has_permissions(administrator=True)
 async def reaction_role_command(inter: disnake.MessageCommandInteraction, emoji: str = commands.Param(
-    description="An emoji or list of emojis. Match the position of the emoji in the list to the role that you want in the role list."),
+    description="An emoji or list of emojis"),
                                 role: str = commands.Param(
-                                    description="a Role or list of roles. Match the position of the role in the list to the emoji that you want in the emoji list."),
+                                    description="a Role or list of roles."),
                                 title: str = commands.Param(description="The title for the embed"),
                                 description: str = commands.Param(description="The description for the embed")):
     await dpys.rr.command(
