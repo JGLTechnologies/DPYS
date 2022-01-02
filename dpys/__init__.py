@@ -40,7 +40,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.0.3"
+version = "5.0.4"
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
@@ -802,8 +802,8 @@ class rr:
                     await msg.add_reaction(x)
                     await db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
                                      (str(msg.id), x, str(role), str(inter.guild.id), str(inter.channel.id)))
+                await inter.response.send_message("Successfully created the reaction role.", ephemeral=True)
                 await db.commit()
-                await inter.response.send_mesage("Successfully created the reaction role.", ephemeral=True)
             else:
                 if "@" not in role:
                     await inter.response.send_message("Invalid role", ephemeral=True)
@@ -824,7 +824,7 @@ class rr:
                 await db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
                                  (str(msg.id), emoji, str(role), str(inter.guild.id), str(inter.channel.id)))
                 await db.commit()
-                await inter.response.send_mesage("Successfully created the reaction role.", ephemeral=True)
+                await inter.response.send_message("Successfully created the reaction role.", ephemeral=True)
 
     @staticmethod
     async def add(payload: discord.RawReactionActionEvent, dir: str, bot: commands.Bot) -> None:
@@ -986,14 +986,15 @@ class rr:
                                     except:
                                         channel = "#deleted-channel"
                                     msg += f"Emoji: {emoji} Role: {role}\n"
-                                msg_limit += f"Channel: {channel} Message ID: {msg_id}\n"
-                                msg += f"Channel: {channel} Message ID: {msg_id}\n"
+                                msg_limit += f"Channel: {channel} \nMessage ID: {msg_id}\n"
+                                msg += f"Channel: {channel} \nMessage ID: {msg_id}\n"
                                 number += 1
                             if len(msg) > 1010:
                                 embed.add_field(
                                     name=f"Reaction Role #{number}", inline=False, value=msg_limit)
                                 limit = True
                             else:
+                                limit = False
                                 embed.add_field(
                                     name=f"Reaction Role #{number}", inline=False, value=msg)
                         except:
