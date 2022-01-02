@@ -77,7 +77,7 @@ async def rr_clear_on_channel_delete(channel):
     await dpys.rr.clear_on_channel_delete(channel, "Your dir goes here.")
 
 
-# Removes data for a reaction role when its channel is deleted
+# Removes data for a reaction role when its thread is deleted
 @client.listen("on_thread_delete")
 async def rr_clear_on_thread_delete(thread):
     await dpys.rr.clear_on_thread_delete(thread, "Your dir goes here.")
