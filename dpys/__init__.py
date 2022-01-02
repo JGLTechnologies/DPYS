@@ -40,7 +40,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.1.1"
+version = "5.1.2"
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
@@ -683,17 +683,20 @@ class warnings:
                                 continue
                             time = datetime.datetime.fromisoformat(time_str)
                             role_add = await add_role_func(int(guild_id))
-                            role_remove = await remove_role_func(int(guild_id))
+                            if remove_role_func is None:
+                                role_remove = None
+                            else:
+                                role_remove = await remove_role_func(int(guild_id))
                             if datetime.datetime.now() >= time:
-                                if role_remove != "None" and role_remove != "None":
+                                if role_add is not None:
                                     try:
                                         await member.add_roles(guild.get_role(int(role_remove)))
                                     except:
                                         pass
-                                try:
-                                    await member.remove_roles(guild.get_role(int(role_add)))
-                                except:
-                                    pass
+                                    try:
+                                        await member.remove_roles(guild.get_role(int(role_add)))
+                                    except:
+                                        pass
                                 await db.execute("DELETE FROM tempmute WHERE guild = ? and member = ? and time = ?",
                                                  (str(guild.id), str(member.id), time_str))
                                 await db.commit()
