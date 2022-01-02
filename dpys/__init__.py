@@ -1,11 +1,8 @@
-# discord.py is no longer maintained. If there is no new official fork by April 2022, most of DPYS will not work anymore.
-
-
 # This library is in development and bugs can be expected. If you encounter any bugs, want to give feedback, or would like to contribute, join our Discord server.
 # https://discord.gg/TUUbzTa3B7
 
 """
-Copyright (c) 2021 George Luca
+Copyright (c) 2021 JGL Technologies
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -43,7 +40,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.0.2"
+version = "5.0.3"
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
@@ -769,14 +766,6 @@ class rr:
                 title=title,
                 color=BLUE,
                 description=description)
-            if "," in role:
-                emoji = emoji.replace(" ", "")
-                emoji_list = emoji.split(",")
-                role = role.replace(" ", "")
-                role_list = role.split(",")
-                if len(role_list) != len(emoji_list):
-                    await inter.response.send_message("Emoji list must be same length as role list.", ephemeral=True)
-                    return
             if "," in emoji:
                 emoji = emoji.replace(" ", "")
                 emoji_list = emoji.split(",")
@@ -785,7 +774,7 @@ class rr:
                 if len(role_list) != len(emoji_list):
                     await inter.response.send_message("Emoji list must be same length as role list.", ephemeral=True)
                     return
-                for x in role_list:
+                for role in role_list:
                     role = role.replace("<", "")
                     role = role.replace(">", "")
                     role = role.replace("@", "")
@@ -814,6 +803,7 @@ class rr:
                     await db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
                                      (str(msg.id), x, str(role), str(inter.guild.id), str(inter.channel.id)))
                 await db.commit()
+                await inter.response.send_mesage("Successfully created the reaction role.", ephemeral=True)
             else:
                 if "@" not in role:
                     await inter.response.send_message("Invalid role", ephemeral=True)
@@ -834,6 +824,7 @@ class rr:
                 await db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
                                  (str(msg.id), emoji, str(role), str(inter.guild.id), str(inter.channel.id)))
                 await db.commit()
+                await inter.response.send_mesage("Successfully created the reaction role.", ephemeral=True)
 
     @staticmethod
     async def add(payload: discord.RawReactionActionEvent, dir: str, bot: commands.Bot) -> None:
