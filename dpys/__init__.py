@@ -40,7 +40,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.0.4"
+version = "5.0.5"
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
@@ -1003,11 +1003,11 @@ class rr:
                     if limit:
                         embed.set_footer(
                             text=f"Total Reaction Roles | {number}")
+                        msg = "One of your reaction roles went over the Discord limit. It will still work perfectly but only essential data will be displayed in this command to save space."
+                        await inter.channel.send(msg, delete_after=10)
                     else:
                         embed.set_footer(
                             text=f"Total Reaction Roles | {number}")
-                        msg = "One of your reaction roles went over the Discord limit. It will still work perfectly but only essential data will be displayed in this command to save space."
-                        await inter.channel.send(msg, delete_after=10)
                     await inter.response.send_message(embed=embed)
                 else:
                     msg = "There are no reaction roles in this server."
