@@ -23,10 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-# Ignore the fact that I used text where there should be an integer in the
-# SQL. I made this when I first started and there is not really a point in
-# changing it now.
-
 import os
 import typing
 import disnake as discord
