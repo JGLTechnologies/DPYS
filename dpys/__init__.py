@@ -36,7 +36,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.2.0"
+version = "5.2.1"
 EPHEMERAL = True
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
@@ -73,11 +73,6 @@ class misc:
                 pass
 
             try:
-                await db.execute("DELETE FROM mute_roles_info WHERE guild = ?", (str(guild.id),))
-            except:
-                pass
-
-            try:
                 await db.execute("DELETE FROM warnings WHERE guild = ?", (str(guild.id),))
             except:
                 pass
@@ -108,7 +103,8 @@ class admin:
     async def mute(inter: MessageCommandInteraction, member: discord.Member, role_add: int,
                    role_remove: typing.Optional[int] = None, reason: str = None) -> None:
         if inter.guild.get_role(role_add) in member.roles:
-            await inter.response.send_message(f"{member.name}#{member.discriminator} is already muted.", ephemeral=EPHEMERAL)
+            await inter.response.send_message(f"{member.name}#{member.discriminator} is already muted.",
+                                              ephemeral=EPHEMERAL)
             return
         if len(str(reason)) > 256:
             reason = reason[:256]
@@ -131,7 +127,8 @@ class admin:
     async def unmute(inter: MessageCommandInteraction, member: discord.Member, role_remove: int,
                      role_add: typing.Optional[int] = None) -> None:
         if inter.guild.get_role(role_remove) not in member.roles:
-            await inter.response.send_message(f"{member.name}#{member.discriminator} is not muted.", ephemeral=EPHEMERAL)
+            await inter.response.send_message(f"{member.name}#{member.discriminator} is not muted.",
+                                              ephemeral=EPHEMERAL)
             return
         else:
             if not isinstance(inter.guild.get_role(role_remove), discord.Role):
@@ -480,12 +477,12 @@ class warnings:
                         color=BLUE, title=f"{user.name}#{user.discriminator}'s 5 Most Recent Warnings")
                     number = 0
                     async for entry in cursor:
-                        if number < 5:
+                        number += 1
+                        if number < 6:
                             embed.add_field(
                                 name=f"#{number} warning",
                                 value=f"Reason: {entry[0]}",
                                 inline=False)
-                        number += 1
                     if number > 0:
                         embed.set_footer(text=f"Total Warnings | {number}")
                         await inter.response.send_message(embed=embed, ephemeral=EPHEMERAL)
@@ -759,7 +756,8 @@ class rr:
                 role = role.replace(" ", "")
                 role_list = role.split(",")
                 if len(role_list) != len(emoji_list):
-                    await inter.response.send_message("Emoji list must be same length as role list.", ephemeral=EPHEMERAL)
+                    await inter.response.send_message("Emoji list must be same length as role list.",
+                                                      ephemeral=EPHEMERAL)
                     return
                 for role in role_list:
                     role = role.replace("<", "")
