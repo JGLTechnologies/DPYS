@@ -1009,7 +1009,7 @@ class rr:
                         embed.set_footer(
                             text=f"Total Reaction Roles | {number}")
                         msg = "One of your reaction roles went over the Discord limit. It will still work perfectly but only essential data will be displayed in this command to save space."
-                        await inter.channel.send(msg, delete_after=10)
+                        await inter.followup.send(msg, ephemeral=EPHEMERAL)
                     else:
                         embed.set_footer(
                             text=f"Total Reaction Roles | {number}")
