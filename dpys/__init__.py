@@ -36,7 +36,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.2.2"
+version = "5.2.3"
 EPHEMERAL = True
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
@@ -737,7 +737,7 @@ class rr:
     async def command(inter: MessageCommandInteraction, emoji: str, dir: str, role: str, title: str,
                       description: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
-        await inter.response.defer(ephemeral=True)
+        await inter.response.send_message("Attempting to create reaction role...", ephemeral=EPHEMERAL)
         async with aiosqlite.connect("rr.db") as db:
             await db.execute("""CREATE TABLE IF NOT EXISTS rr(
             msg_id TEXT,
@@ -757,8 +757,8 @@ class rr:
                 role = role.replace(" ", "")
                 role_list = role.split(",")
                 if len(role_list) != len(emoji_list):
-                    await inter.response.send_message("Emoji list must be same length as role list.",
-                                                      ephemeral=EPHEMERAL)
+                    await inter.followup.send("Emoji list must be same length as role list.",
+                                              ephemeral=EPHEMERAL)
                     return
                 for role in role_list:
                     role = role.replace("<", "")
@@ -767,17 +767,17 @@ class rr:
                     role = role.replace("&", "")
                     try:
                         if inter.guild.get_role(int(role)) is None:
-                            await inter.response.send_message("Invalid role", ephemeral=EPHEMERAL)
+                            await inter.followup.send("Invalid role", ephemeral=EPHEMERAL)
                             return
                     except:
-                        await inter.response.send_message("Invalid role", ephemeral=EPHEMERAL)
+                        await inter.followup.send("Invalid role", ephemeral=EPHEMERAL)
                         return
                 msg = await inter.channel.send(embed=embed)
                 number = 0
                 for x in emoji_list:
                     role = role_list[number]
                     if "@" not in role:
-                        await inter.response.send_message("Invalid role", ephemeral=EPHEMERAL)
+                        await inter.followup.send("Invalid role", ephemeral=EPHEMERAL)
                         await msg.delete()
                         return
                     role = role.replace("<", "")
@@ -788,11 +788,11 @@ class rr:
                     await msg.add_reaction(x)
                     await db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
                                      (str(msg.id), x, str(role), str(inter.guild.id), str(inter.channel.id)))
-                await inter.response.send_message("Successfully created the reaction role.", ephemeral=EPHEMERAL)
+                await inter.followup.send("Successfully created the reaction role.", ephemeral=EPHEMERAL)
                 await db.commit()
             else:
                 if "@" not in role:
-                    await inter.response.send_message("Invalid role", ephemeral=EPHEMERAL)
+                    await inter.followup.send("Invalid role", ephemeral=EPHEMERAL)
                     return
                 role = role.replace("<", "")
                 role = role.replace(">", "")
@@ -800,17 +800,17 @@ class rr:
                 role = role.replace("&", "")
                 try:
                     if inter.guild.get_role(int(role)) is None:
-                        await inter.response.send_message("Invalid role", ephemeral=EPHEMERAL)
+                        await inter.followup.send("Invalid role", ephemeral=EPHEMERAL)
                         return
                 except:
-                    await inter.response.send_message("Invalid role", ephemeral=EPHEMERAL)
+                    await inter.followup.send("Invalid role", ephemeral=EPHEMERAL)
                     return
                 msg = await inter.channel.send(embed=embed)
                 await msg.add_reaction(emoji)
                 await db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
                                  (str(msg.id), emoji, str(role), str(inter.guild.id), str(inter.channel.id)))
                 await db.commit()
-                await inter.response.send_message("Successfully created the reaction role.", ephemeral=EPHEMERAL)
+                await inter.followup.send("Successfully created the reaction role.", ephemeral=EPHEMERAL)
 
     @staticmethod
     async def add(payload: discord.RawReactionActionEvent, dir: str, bot: commands.Bot) -> None:
