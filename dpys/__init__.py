@@ -36,7 +36,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.2.4"
+version = "5.2.5"
 EPHEMERAL = True
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
@@ -389,7 +389,7 @@ class mute_on_join:
             pass
 
     @staticmethod
-    async def mute_on_join(member: discord.Member, role: int, dir: str):
+    async def mute_on_join(member: discord.Member, role: int, dir: str) -> None:
         user = member
         guildid = str(member.guild.id)
         muted_role = member.guild.get_role(role)
@@ -464,7 +464,7 @@ class warnings:
             await inter.response.send_message(msg, ephemeral=EPHEMERAL)
 
     @staticmethod
-    async def warnings_list(inter: MessageCommandInteraction, member: discord.Member, dir: str):
+    async def warnings_list(inter: MessageCommandInteraction, member: discord.Member, dir: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guildid = str(inter.guild.id)
         user = member
