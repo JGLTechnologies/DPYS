@@ -36,7 +36,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.2.3"
+version = "5.2.4"
 EPHEMERAL = True
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
@@ -566,7 +566,7 @@ class warnings:
 
     @staticmethod
     async def punish(inter: MessageCommandInteraction, member: discord.Member, dir: str,
-                     punishments: typing.List[Punishment],
+                     punishments: typing.List[typing.Optional[Punishment]],
                      add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         memberid = str(member.id)
