@@ -36,7 +36,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.2.1"
+version = "5.2.2"
 EPHEMERAL = True
 
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
@@ -737,6 +737,7 @@ class rr:
     async def command(inter: MessageCommandInteraction, emoji: str, dir: str, role: str, title: str,
                       description: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
+        await inter.response.defer(ephemeral=True)
         async with aiosqlite.connect("rr.db") as db:
             await db.execute("""CREATE TABLE IF NOT EXISTS rr(
             msg_id TEXT,
