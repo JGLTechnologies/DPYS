@@ -212,7 +212,7 @@ async def clear(inter: disnake.MessageCommandInteraction, amount: typing.Optiona
 
 ```python
 @bot.slash_command(name="clear")
-async def clear(inter, amount: int = commands.Param(default=None)):
+async def clear(inter, amount: int = commands.Param(default=99999999999999999)):
     await dpys.admin.clear(inter, amount)
 ```
 
