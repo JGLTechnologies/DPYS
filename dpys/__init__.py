@@ -30,7 +30,7 @@ import datetime
 import aiosqlite
 import asyncio
 from disnake.ext import commands
-from disnake import MessageCommandInteraction
+from disnake import ApplicationCommandInteraction
 from dpys import utils
 
 RED = 0xD40C00
@@ -45,7 +45,7 @@ print("We recommend that you read https://jgltechnologies.com/dpys before you us
 class misc:
 
     @staticmethod
-    async def reload(inter: MessageCommandInteraction, bot: commands.Bot, cogs: typing.List[str]) -> None:
+    async def reload(inter: ApplicationCommandInteraction, bot: commands.Bot, cogs: typing.List[str]) -> None:
         if not isinstance(cogs, list):
             raise Exception("cogs must be a list.")
         total = len(cogs)
@@ -100,7 +100,7 @@ class misc:
 class admin:
 
     @staticmethod
-    async def mute(inter: MessageCommandInteraction, member: discord.Member, role_add: int,
+    async def mute(inter: ApplicationCommandInteraction, member: discord.Member, role_add: int,
                    role_remove: typing.Optional[int] = None, reason: str = None) -> None:
         if inter.guild.get_role(role_add) in member.roles:
             await inter.response.send_message(f"{member.name}#{member.discriminator} is already muted.",
@@ -124,7 +124,7 @@ class admin:
                                                   ephemeral=EPHEMERAL)
 
     @staticmethod
-    async def unmute(inter: MessageCommandInteraction, member: discord.Member, role_remove: int,
+    async def unmute(inter: ApplicationCommandInteraction, member: discord.Member, role_remove: int,
                      role_add: typing.Optional[int] = None) -> None:
         if inter.guild.get_role(role_remove) not in member.roles:
             await inter.response.send_message(f"{member.name}#{member.discriminator} is not muted.",
@@ -142,7 +142,7 @@ class admin:
             await inter.response.send_message(f"Unmuted {member.name}#{member.discriminator}.", ephemeral=EPHEMERAL)
 
     @staticmethod
-    async def clear(inter: MessageCommandInteraction, amount: typing.Optional[int] = 99999999999999999) -> int:
+    async def clear(inter: ApplicationCommandInteraction, amount: typing.Optional[int] = 99999999999999999) -> int:
         limit = datetime.datetime.now() - datetime.timedelta(weeks=2)
         purged = await inter.channel.purge(limit=amount, after=limit)
         purged = len(purged)
@@ -154,7 +154,7 @@ class admin:
         return purged
 
     @staticmethod
-    async def kick(inter: MessageCommandInteraction, member: discord.Member,
+    async def kick(inter: ApplicationCommandInteraction, member: discord.Member,
                    reason: typing.Optional[str] = None) -> None:
         if len(str(reason)) > 256:
             reason = reason[:256]
@@ -166,7 +166,7 @@ class admin:
         await inter.response.send_message(message, ephemeral=EPHEMERAL)
 
     @staticmethod
-    async def ban(inter: MessageCommandInteraction, member: discord.Member,
+    async def ban(inter: ApplicationCommandInteraction, member: discord.Member,
                   reason: typing.Optional[str] = None) -> None:
         if len(str(reason)) > 256:
             reason = reason[:256]
@@ -178,7 +178,7 @@ class admin:
         await inter.response.send_message(message, ephemeral=EPHEMERAL)
 
     @staticmethod
-    async def softban(inter: MessageCommandInteraction, member: discord.Member,
+    async def softban(inter: ApplicationCommandInteraction, member: discord.Member,
                       reason: typing.Optional[str] = None) -> None:
         if len(str(reason)) > 256:
             reason = reason[:256]
@@ -191,7 +191,7 @@ class admin:
         await member.unban()
 
     @staticmethod
-    async def unban(inter: MessageCommandInteraction, member: typing.Union[str, int]) -> None:
+    async def unban(inter: ApplicationCommandInteraction, member: typing.Union[str, int]) -> None:
         bans = await inter.guild.bans()
         if isinstance(member, int):
             ban = [ban for ban in bans if ban.user.id == member]
@@ -212,7 +212,7 @@ class admin:
 class curse:
 
     @staticmethod
-    async def add_banned_word(inter: MessageCommandInteraction, word: str, dir: str) -> None:
+    async def add_banned_word(inter: ApplicationCommandInteraction, word: str, dir: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         word = word.lower()
         guildid = str(inter.guild.id)
@@ -237,7 +237,7 @@ class curse:
             await inter.response.send_message("The word(s) have been added to the list.", ephemeral=EPHEMERAL)
 
     @staticmethod
-    async def remove_banned_word(inter: MessageCommandInteraction, word: str, dir: str) -> None:
+    async def remove_banned_word(inter: ApplicationCommandInteraction, word: str, dir: str) -> None:
         async with aiosqlite.connect("curse.db") as db:
             await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
             guildid = str(inter.guild.id)
@@ -343,7 +343,7 @@ class curse:
                     return
 
     @staticmethod
-    async def clear_words(inter: MessageCommandInteraction, dir: str) -> None:
+    async def clear_words(inter: ApplicationCommandInteraction, dir: str) -> None:
         guildid = str(inter.guild.id)
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         try:
@@ -437,7 +437,7 @@ class warnings:
                 self.duration = duration
 
     @staticmethod
-    async def warn(inter: MessageCommandInteraction, member: discord.Member, dir: str,
+    async def warn(inter: ApplicationCommandInteraction, member: discord.Member, dir: str,
                    reason: typing.Optional[str] = None) -> None:
         if len(str(reason)) > 256:
             reason = reason[:256]
@@ -464,7 +464,7 @@ class warnings:
             await inter.response.send_message(msg, ephemeral=EPHEMERAL)
 
     @staticmethod
-    async def warnings_list(inter: MessageCommandInteraction, member: discord.Member, dir: str) -> None:
+    async def warnings_list(inter: ApplicationCommandInteraction, member: discord.Member, dir: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guildid = str(inter.guild.id)
         user = member
@@ -493,7 +493,7 @@ class warnings:
             await inter.response.send_message(f"{user.name}#{user.discriminator} has no warnings.", ephemeral=EPHEMERAL)
 
     @staticmethod
-    async def unwarn(inter: MessageCommandInteraction, member, dir, number: typing.Union[int, str]) -> None:
+    async def unwarn(inter: ApplicationCommandInteraction, member, dir, number: typing.Union[int, str]) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         user = member
         guild = str(inter.guild.id)
@@ -565,7 +565,7 @@ class warnings:
                     await inter.response.send_message(msg, ephemeral=EPHEMERAL)
 
     @staticmethod
-    async def punish(inter: MessageCommandInteraction, member: discord.Member, dir: str,
+    async def punish(inter: ApplicationCommandInteraction, member: discord.Member, dir: str,
                      punishments: typing.List[typing.Optional[Punishment]],
                      add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
@@ -734,7 +734,7 @@ class warnings:
 class rr:
 
     @staticmethod
-    async def command(inter: MessageCommandInteraction, emoji: str, dir: str, role: str, title: str,
+    async def command(inter: ApplicationCommandInteraction, emoji: str, dir: str, role: str, title: str,
                       description: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         await inter.response.send_message("Attempting to create reaction role...", ephemeral=EPHEMERAL)
@@ -854,7 +854,7 @@ class rr:
                 pass
 
     @staticmethod
-    async def clear_all(inter: MessageCommandInteraction, dir: str) -> None:
+    async def clear_all(inter: ApplicationCommandInteraction, dir: str) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guild = str(inter.guild.id)
         async with aiosqlite.connect("rr.db") as db:
@@ -867,7 +867,7 @@ class rr:
             await inter.response.send_message(msg, ephemeral=EPHEMERAL)
 
     @staticmethod
-    async def clear_one(inter: MessageCommandInteraction, dir: str, message_id: int) -> None:
+    async def clear_one(inter: ApplicationCommandInteraction, dir: str, message_id: int) -> None:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guild = str(inter.guild.id)
         message_id = str(message_id)
@@ -960,7 +960,7 @@ class rr:
                 pass
 
     @staticmethod
-    async def display(inter: MessageCommandInteraction, dir: str) -> None:
+    async def display(inter: ApplicationCommandInteraction, dir: str) -> None:
         limit = False
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guild = str(inter.guild.id)

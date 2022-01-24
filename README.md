@@ -49,7 +49,7 @@ TOKEN = "Your Token"
 # Do not type hint disnake.Role for the role argument
 # Command to create the reaction role
 @commands.slash_command(name="rr")
-async def reaction_role_command(inter: disnake.MessageCommandInteraction, emoji: str = commands.Param(
+async def reaction_role_command(inter: disnake.ApplicationCommandInteraction, emoji: str = commands.Param(
     description="An emoji or list of emojis"),
                                 role: str = commands.Param(
                                     description="a Role or list of roles."),
@@ -81,13 +81,13 @@ async def role_remove(payload):
 
 # Command to list all current reaction roles in the guild
 @commands.slash_command(name="listrr")
-async def listrr(inter: disnake.MessageCommandInteraction):
+async def listrr(inter: disnake.ApplicationCommandInteraction):
     await dpys.rr.display(inter, "Your dir goes here.")
 
 
 # Command to remove reaction role info from the database
 @commands.slash_command(name="rrclear")
-async def rrclear(inter: disnake.MessageCommandInteraction, id: str = commands.Param(
+async def rrclear(inter: disnake.ApplicationCommandInteraction, id: str = commands.Param(
     description="The id or list of ids of the reaction roles you want to remove")):
     """
     Putting "all" as the id argument will wipe all reaction role data for the guild.
@@ -147,7 +147,7 @@ You will here 'mute remove role' mentioned a lot. This is just an optional role 
 Kick:
 
 ```python
-async def kick(inter: disnake.MessageCommandInteraction, member: disnake.Member, reason: typing.Optional[str] = None) -> None
+async def kick(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, reason: typing.Optional[str] = None) -> None
 ```
 
 ```python
@@ -164,7 +164,7 @@ async def kick(inter, member: disnake.Member = commands.Param(), reason: str = c
 Ban:
 
 ```python
-async def ban(inter: disnake.MessageCommandInteraction, member: disnake.Member, reason: typing.Optional[str] = None) -> None
+async def ban(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, reason: typing.Optional[str] = None) -> None
 ```
 
 ```python
@@ -179,7 +179,7 @@ async def ban(inter, member: disnake.Member = commands.Param(), reason: str = co
 Mute:
 
 ```python
-async def mute(inter: disnake.MessageCommandInteraction, member: disnake.Member, role_add: int, role_remove: typing.Optional[int] = None, reason: str = None) -> None
+async def mute(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, role_add: int, role_remove: typing.Optional[int] = None, reason: str = None) -> None
 ```
 
 ```python
@@ -193,7 +193,7 @@ async def mute(inter, member: disnake.Member = commands.Param(), reason: str = c
 Unmute:
 
 ```python
-async def unmute(inter: disnake.MessageCommandInteraction, member: disnake.Member, role_remove: int, role_add: typing.Optional[int] = None) -> None
+async def unmute(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, role_remove: int, role_add: typing.Optional[int] = None) -> None
 ```
 
 ```python
@@ -207,7 +207,7 @@ async def unmute(inter, member: disnake.Member = commands.Param()):
 Clear:
 
 ```python
-async def clear(inter: disnake.MessageCommandInteraction, amount: typing.Optional[int] = 99999999999999999) -> int
+async def clear(inter: disnake.ApplicationCommandInteraction, amount: typing.Optional[int] = 99999999999999999) -> int
 ```
 
 ```python
@@ -284,7 +284,7 @@ async def manual_unmute_check(before: disnake.Member, after: disnake.Member):
 Command:
 
 ```python
-async def command(inter: disnake.MessageCommandInteraction, emoji: str, dir: str, role: str, title: str, description: str) -> None
+async def command(inter: disnake.ApplicationCommandInteraction, emoji: str, dir: str, role: str, title: str, description: str) -> None
 ```
 
 ```python
@@ -299,12 +299,12 @@ async def reactionrole(inter, emoji: str = commands.Param(), role: str = command
 Command To List Reaction Roles:
 
 ```python
-async def display(inter: MessageCommandInteraction, dir: str) -> None
+async def display(inter: ApplicationCommandInteraction, dir: str) -> None
 ```
 
 ```python
 @bot.slash_command(name="listrr")
-async def listrr(inter: disnake.MessageCommandInteraction):
+async def listrr(inter: disnake.ApplicationCommandInteraction):
     await dpys.rr.display(inter, DIR)
 ```
 
@@ -341,9 +341,9 @@ async def rr_remove(payload: disnake.RawReactionActionEvent):
 Clear Reaction Role command:
 
 ```python
-async def clear_all(inter: disnake.MessageCommandInteraction, dir: str) -> None
+async def clear_all(inter: disnake.ApplicationCommandInteraction, dir: str) -> None
 
-async def clear_one(inter: disnake.MessageCommandInteraction, dir: str, message_id: int) -> None
+async def clear_one(inter: disnake.ApplicationCommandInteraction, dir: str, message_id: int) -> None
 ```
 
 ```python
@@ -387,12 +387,12 @@ async def rr_clear_on_thread_delete(thread: disnake.Thread):
 Warn:
 
 ```python
-async def warn(inter: disnake.MessageCommandInteraction, member: disnake.Member, dir: str, reason: typing.Optional[str] = None) -> None
+async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, dir: str, reason: typing.Optional[str] = None) -> None
 ```
 
 ```python
 @bot.slash_command(name="warn")
-async def warn(inter: disnake.MessageCommandInteraction, member: disnake.Member = commands.Param(),
+async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param(),
                reason: str = commands.Param(default=None)):
     await dpys.warnings.warn(inter, member, DIR, reason)
 ```
@@ -402,13 +402,13 @@ async def warn(inter: disnake.MessageCommandInteraction, member: disnake.Member 
 Unwarn:
 
 ```python
-async def unwarn(inter: disnake.MessageCommandInteraction, member, dir, number: typing.Union[int, str]) -> None
+async def unwarn(inter: disnake.ApplicationCommandInteraction, member, dir, number: typing.Union[int, str]) -> None
 ```
 
 ```python
 # Pass in "all" as the number parameter to clear all warnings from a member
 @bot.slash_command(name="unwarn")
-async def unwarn(inter: disnake.MessageCommandInteraction, member: disnake.Member = commands.Param(), number: str = commands.Param(default="all")):
+async def unwarn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param(), number: str = commands.Param(default="all")):
 	await dpys.warnings.unwarn(inter, member, DIR, number)
 ```
 
@@ -417,14 +417,14 @@ async def unwarn(inter: disnake.MessageCommandInteraction, member: disnake.Membe
 Punish:
 
 ```python
-async def punish(inter: disnake.MessageCommandInteraction, member: disnake.Member, dir: str,
+async def punish(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, dir: str,
                      punishments: typing.List[typing.Optional[Punishment]],
                      add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None) -> None
 ```
 
 ```python
 @bot.slash_command(name="warn")
-async def warn(inter: disnake.MessageCommandInteraction, member: disnake.Member = commands.Param(),
+async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param(),
                reason: str = commands.Param(default=None)):
     await dpys.warnings.warn(inter, member, DIR, reason)
     # This will do nothing for the first 2 warnibgs, but on the third warning it will kick the member.
@@ -477,12 +477,12 @@ def setup(bot):
 Warnings:
 
 ```python
-async def warnings_list(inter: disnake.MessageCommandInteraction, member: disnake.Member, dir: str) -> None
+async def warnings_list(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, dir: str) -> None
 ```
 
 ```python
 @bot.slash_command(name="warnings")
-    async def warnings(inter: disnake.MessageCommandInteraction, member: disnake.Member = commands.Param()):
+    async def warnings(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param()):
         await dpys.warnings.warnings_list(inter, member, DIR)
 ```
 
@@ -493,12 +493,12 @@ async def warnings_list(inter: disnake.MessageCommandInteraction, member: disnak
 Add Word:
 
 ```python
-async def add_banned_word(inter: disnake.MessageCommandInteraction, word: str, dir: str) -> None
+async def add_banned_word(inter: disnake.ApplicationCommandInteraction, word: str, dir: str) -> None
 ```
 
 ```python
 @bot.slash_command(name="addword")
-async def add_word(inter: disnake.MessageCommandInteraction, curses: str = commands.Param()):
+async def add_word(inter: disnake.ApplicationCommandInteraction, curses: str = commands.Param()):
     await dpys.curse.add_banned_word(inter, curses, DIR)
 ```
 
@@ -507,12 +507,12 @@ async def add_word(inter: disnake.MessageCommandInteraction, curses: str = comma
 Remove Word:
 
 ```python
-async def remove_banned_word(inter: disnake.MessageCommandInteraction, word: str, dir: str) -> None
+async def remove_banned_word(inter: disnake.ApplicationCommandInteraction, word: str, dir: str) -> None
 ```
 
 ```python
 @bot.slash_command(name="removeword")
-async def remove_word(inter: disnake.MessageCommandInteraction, curses: str = commands.Param()):
+async def remove_word(inter: disnake.ApplicationCommandInteraction, curses: str = commands.Param()):
     await dpys.curse.remove_banned_word(inter, curses, DIR)
 ```
 
@@ -521,12 +521,12 @@ async def remove_word(inter: disnake.MessageCommandInteraction, curses: str = co
 Clear Words:
 
 ```python
-async def clear_words(inter: disnake.MessageCommandInteraction, dir: str) -> None
+async def clear_words(inter: disnake.ApplicationCommandInteraction, dir: str) -> None
 ```
 
 ```python
 @bot.slash_command(name="clearwords")
-async def clear_words(inter: disnake.MessageCommandInteraction):
+async def clear_words(inter: disnake.ApplicationCommandInteraction):
     await dpys.curse.clear_words(inter, DIR)
 ```
 
@@ -537,12 +537,12 @@ async def clear_words(inter: disnake.MessageCommandInteraction):
 Reload:
 
 ```python
-async def reload(inter: disnake.MessageCommandInteraction, bot: commands.Bot, cogs: typing.List[str]) -> None
+async def reload(inter: disnake.ApplicationCommandInteraction, bot: commands.Bot, cogs: typing.List[str]) -> None
 ```
 
 ```python
 @bot.slash_command(name="reload")
-async def reload(inter: disnake.MessageCommandInteraction):
+async def reload(inter: disnake.ApplicationCommandInteraction):
     cogs = ["cogs.admin", "cogs.fun", "cogs.misc"]
     await dpys.misc.reload(inter, bot, cogs)
 ```
