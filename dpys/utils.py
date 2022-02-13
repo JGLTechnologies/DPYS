@@ -1,24 +1,25 @@
 import asyncio
+import typing
 import aiosqlite
 import os
 import aiohttp
+from pathlib import Path
+from disnake.ext import commands
+import disnake
 
 DPYS_DBS = ["warnings.db", "curse.db", "rr.db", "muted.db"]
 
 
-# utils is not done yet.
-# Documentation coming soon.
-
-
-async def var_can_be_type(var, type, **kwargs) -> bool:
+def var_can_be_type(var: typing.Any, type: typing.Any, **kwargs) -> bool:
     try:
         type(var)
-    except:
+    except Exception:
         return False
     return True
 
 
 class GuildData:
+    @staticmethod
     async def curse_set(guild_id: int, dir: str) -> set:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         curse_set = set()
@@ -31,10 +32,11 @@ class GuildData:
                     async for entry in cursor:
                         curse_set.add(entry[0])
                 return curse_set
-            except:
+            except Exception:
                 return set({})
 
-    async def bot_percentage(guild) -> float:
+    @staticmethod
+    async def bot_percentage(guild: disnake.Guild) -> float:
         total = 0
         bot = 0
         for member in guild.members:
@@ -45,15 +47,17 @@ class GuildData:
 
 
 class BotData:
-    async def bot_percentage(client) -> float:
+    @staticmethod
+    async def bot_percentage(bot: commands.Bot) -> float:
         total = 0
-        bot = 0
-        for member in client.get_all_members():
+        bots = 0
+        for member in bot.get_all_members():
             if member.bot:
-                bot += 1
+                bots += 1
             total += 1
-        return float(round(bot / total, 2))
+        return float(round(bots / total, 2))
 
+    @staticmethod
     async def dpys_storage_size(dir: str) -> dict:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         root_directory = Path(dir)
@@ -82,7 +86,7 @@ class DiscordUtils:
                 data = await r.json()
         try:
             name = data["store_listing"]["sku"]["name"]
-        except:
+        except KeyError:
             return False
         if data["uses"] >= data["max_uses"]:
             return False
