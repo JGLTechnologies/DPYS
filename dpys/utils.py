@@ -1,5 +1,4 @@
 import asyncio
-import typing
 import aiosqlite
 import os
 import aiohttp
@@ -8,14 +7,6 @@ from disnake.ext import commands
 import disnake
 
 DPYS_DBS = ["warnings.db", "curse.db", "rr.db", "muted.db"]
-
-
-def var_can_be_type(var: typing.Any, type: typing.Any, **kwargs) -> bool:
-    try:
-        type(var)
-    except Exception:
-        return False
-    return True
 
 
 class GuildData:
