@@ -1,5 +1,5 @@
 # This library is in development and bugs can be expected. If you encounter any bugs, want to give feedback, or would like to contribute, join our Discord server.
-# https://discord.gg/TUUbzTa3B7
+# https://jgltechnologies.com/dicord
 
 """
 Copyright (c) 2021 JGL Technologies
@@ -28,7 +28,6 @@ import typing
 import disnake as discord
 import datetime
 import aiosqlite
-import asyncio
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
 from dpys import utils
@@ -60,8 +59,7 @@ class misc:
 
     @staticmethod
     async def clear_data_on_guild_remove(guild: discord.Guild, dir: str) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
-        async with aiosqlite.connect("warnings.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "warnings.db")) as db:
             try:
                 await db.execute("DELETE FROM tempmute WHERE guild = ?", (str(guild.id),))
             except:
@@ -77,19 +75,19 @@ class misc:
             except:
                 pass
             await db.commit()
-        async with aiosqlite.connect("rr.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "rr.db")) as db:
             try:
                 await db.execute("DELETE FROM rr WHERE guild = ?", (str(guild.id),))
             except:
                 pass
             await db.commit()
-        async with aiosqlite.connect("muted.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "muted.db")) as db:
             try:
                 await db.execute("DELETE FROM muted WHERE guild = ?", (str(guild.id),))
             except:
                 pass
             await db.commit()
-        async with aiosqlite.connect("curse.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "curse.db")) as db:
             try:
                 await db.execute("DELETE FROM curses WHERE guild = ?", (str(guild.id),))
             except:
@@ -213,10 +211,9 @@ class curse:
 
     @staticmethod
     async def add_banned_word(inter: ApplicationCommandInteraction, word: str, dir: str) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         word = word.lower()
         guildid = str(inter.guild.id)
-        async with aiosqlite.connect("curse.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "curse.db")) as db:
             await db.execute(f"""CREATE TABLE if NOT EXISTS curses(
             curse TEXT,
             guild TEXT,
@@ -238,8 +235,8 @@ class curse:
 
     @staticmethod
     async def remove_banned_word(inter: ApplicationCommandInteraction, word: str, dir: str) -> None:
-        async with aiosqlite.connect("curse.db") as db:
-            await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
+        async with aiosqlite.connect(os.path.join(dir, "curse.db")) as db:
+
             guildid = str(inter.guild.id)
             try:
                 word = word.lower()
@@ -271,7 +268,6 @@ class curse:
                              exempt_roles: typing.Optional[typing.List[int]] = None) -> None:
         if message.author.bot or message.guild is None:
             return
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guildid = str(message.guild.id)
         if exempt_roles is not None:
             for id in exempt_roles:
@@ -281,7 +277,7 @@ class curse:
             else:
                 try:
                     messagecontent = message.content.lower()
-                    async with aiosqlite.connect("curse.db") as db:
+                    async with aiosqlite.connect(os.path.join(dir, "curse.db")) as db:
                         async with db.execute("SELECT curse FROM curses WHERE guild = ?", (guildid,)) as cursor:
                             async for entry in cursor:
                                 if entry[0] in messagecontent.split():
@@ -293,7 +289,7 @@ class curse:
         else:
             try:
                 messagecontent = message.content.lower()
-                async with aiosqlite.connect("curse.db") as db:
+                async with aiosqlite.connect(os.path.join(dir, "curse.db")) as db:
                     async with db.execute("SELECT curse FROM curses WHERE guild = ?", (guildid,)) as cursor:
                         async for entry in cursor:
                             if entry[0] in messagecontent.split():
@@ -308,7 +304,6 @@ class curse:
         message = after
         if message.author.bot or message.guild is None:
             return
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guildid = str(message.guild.id)
         if message.author.bot:
             return
@@ -321,7 +316,7 @@ class curse:
                 else:
                     try:
                         messagecontent = message.content.lower()
-                        async with aiosqlite.connect("curse.db") as db:
+                        async with aiosqlite.connect(os.path.join(dir, "curse.db")) as db:
                             async with db.execute("SELECT curse FROM curses WHERE guild = ?", (guildid,)) as cursor:
                                 async for entry in cursor:
                                     if entry[0] in messagecontent.split():
@@ -333,7 +328,7 @@ class curse:
             else:
                 try:
                     messagecontent = message.content.lower()
-                    async with aiosqlite.connect("curse.db") as db:
+                    async with aiosqlite.connect(os.path.join(dir, "curse.db")) as db:
                         async with db.execute("SELECT curse FROM curses WHERE guild = ?", (guildid,)) as cursor:
                             async for entry in cursor:
                                 if entry[0] in messagecontent.split():
@@ -345,9 +340,8 @@ class curse:
     @staticmethod
     async def clear_words(inter: ApplicationCommandInteraction, dir: str) -> None:
         guildid = str(inter.guild.id)
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         try:
-            async with aiosqlite.connect("curse.db") as db:
+            async with aiosqlite.connect(os.path.join(dir, "curse.db")) as db:
                 await db.execute("DELETE FROM curses WHERE guild = ?", (guildid,))
                 await db.commit()
                 await inter.response.send_message("Cleared all curses from this server", ephemeral=EPHEMERAL)
@@ -360,11 +354,10 @@ class mute_on_join:
 
     @staticmethod
     async def mute_add(guild: discord.Guild, member: discord.Member, dir: str) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guildid = str(guild.id)
         member = str(member.id)
         try:
-            async with aiosqlite.connect("muted.db") as db:
+            async with aiosqlite.connect(os.path.join(dir, "muted.db")) as db:
                 await db.execute(f"""CREATE TABLE if NOT EXISTS muted(
                 name TEXT,
                 guild TEXT,
@@ -380,9 +373,8 @@ class mute_on_join:
     async def mute_remove(guild: discord.Guild, member: discord.Member, dir: str) -> None:
         member = str(member.id)
         guildid = str(guild.id)
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         try:
-            async with aiosqlite.connect("muted.db") as db:
+            async with aiosqlite.connect(os.path.join(dir, "muted.db")) as db:
                 await db.execute("DELETE FROM muted WHERE name = ? and guild = ?", (member, guildid))
                 await db.commit()
         except:
@@ -395,10 +387,9 @@ class mute_on_join:
         muted_role = member.guild.get_role(role)
         if not isinstance(muted_role, discord.Role):
             return
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         member = str(member.id)
         try:
-            async with aiosqlite.connect("muted.db") as db:
+            async with aiosqlite.connect(os.path.join(dir, "muted.db")) as db:
                 async with db.execute("SELECT name FROM muted WHERE guild = ?", (guildid,)) as cursor:
                     async for entry in cursor:
                         if entry[0] == member:
@@ -408,12 +399,11 @@ class mute_on_join:
 
     @staticmethod
     async def manual_unmute_check(after: discord.Member, roleid: int, dir: str) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         if after.bot:
             return
         guildid = str(after.guild.id)
         role = after.guild.get_role(roleid)
-        async with aiosqlite.connect("muted.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "muted.db")) as db:
             memberid = str(after.id)
             try:
                 if role not in after.roles:
@@ -441,12 +431,11 @@ class warnings:
                    reason: typing.Optional[str] = None) -> None:
         if len(str(reason)) > 256:
             reason = reason[:256]
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         reason_str = str(reason)
         guildid = str(inter.guild.id)
         user = member
         member = str(member.id)
-        async with aiosqlite.connect("warnings.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "warnings.db")) as db:
             await db.execute("""CREATE TABLE if NOT EXISTS warnings(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             member_id TEXT,
@@ -465,12 +454,11 @@ class warnings:
 
     @staticmethod
     async def warnings_list(inter: ApplicationCommandInteraction, member: discord.Member, dir: str) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guildid = str(inter.guild.id)
         user = member
         member = str(member.id)
         try:
-            async with aiosqlite.connect("warnings.db") as db:
+            async with aiosqlite.connect(os.path.join(dir, "warnings.db")) as db:
                 async with db.execute("SELECT reason FROM warnings WHERE guild = ? and member_id = ?",
                                       (guildid, member)) as cursor:
                     embed = discord.Embed(
@@ -494,13 +482,12 @@ class warnings:
 
     @staticmethod
     async def unwarn(inter: ApplicationCommandInteraction, member, dir, number: typing.Union[int, str]) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         user = member
         guild = str(inter.guild.id)
         member = str(member.id)
         number = str(number)
         number = number.lower()
-        async with aiosqlite.connect("warnings.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "warnings.db")) as db:
             try:
                 async with db.execute("SELECT reason FROM warnings WHERE guild = ? and member_id = ?",
                                       (guild, member)) as cursor:
@@ -568,10 +555,9 @@ class warnings:
     async def punish(inter: ApplicationCommandInteraction, member: discord.Member, dir: str,
                      punishments: typing.List[typing.Optional[Punishment]],
                      add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         memberid = str(member.id)
         guild = str(inter.guild.id)
-        async with aiosqlite.connect("warnings.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "warnings.db")) as db:
             await db.execute("""CREATE TABLE IF NOT EXISTS tempmute(
                         guild TEXT,
                         member TEXT,
@@ -657,8 +643,7 @@ class warnings:
     @staticmethod
     async def temp_mute_loop(dir: str, bot: commands.Bot, add_role_func: typing.Awaitable,
                              remove_role_func: typing.Optional[typing.Awaitable] = None) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
-        async with aiosqlite.connect("warnings.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "warnings.db")) as db:
             try:
                 async with db.execute("SELECT guild,member,time FROM tempmute") as cursor:
                     async for entry in cursor:
@@ -702,8 +687,7 @@ class warnings:
 
     @staticmethod
     async def temp_ban_loop(dir: str, bot: commands.Bot) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
-        async with aiosqlite.connect("warnings.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "warnings.db")) as db:
             try:
                 async with db.execute("SELECT guild,member,time FROM tempban") as cursor:
                     async for entry in cursor:
@@ -736,9 +720,8 @@ class rr:
     @staticmethod
     async def command(inter: ApplicationCommandInteraction, emoji: str, dir: str, role: str, title: str,
                       description: str) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         await inter.response.send_message("Attempting to create reaction role...", ephemeral=EPHEMERAL)
-        async with aiosqlite.connect("rr.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "rr.db")) as db:
             await db.execute("""CREATE TABLE IF NOT EXISTS rr(
             msg_id TEXT,
             emoji UNICODE,
@@ -814,13 +797,12 @@ class rr:
 
     @staticmethod
     async def add(payload: discord.RawReactionActionEvent, dir: str, bot: commands.Bot) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         if payload.guild_id is None:
             return
         if payload.member.bot:
             return
         guild = bot.get_guild(payload.guild_id)
-        async with aiosqlite.connect("rr.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "rr.db")) as db:
             try:
                 async with db.execute("SELECT emoji,role FROM rr WHERE guild = ? and msg_id = ?",
                                       (str(guild.id), str(payload.message_id))) as cursor:
@@ -834,14 +816,13 @@ class rr:
 
     @staticmethod
     async def remove(payload: discord.RawReactionActionEvent, dir: str, bot: commands.Bot) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         if payload.guild_id is None:
             return
         guild = bot.get_guild(payload.guild_id)
         member = guild.get_member(payload.user_id)
         if member.bot:
             return
-        async with aiosqlite.connect("rr.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "rr.db")) as db:
             try:
                 async with db.execute("SELECT emoji,role FROM rr WHERE guild = ? and msg_id = ?",
                                       (str(guild.id), str(payload.message_id))) as cursor:
@@ -855,9 +836,8 @@ class rr:
 
     @staticmethod
     async def clear_all(inter: ApplicationCommandInteraction, dir: str) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guild = str(inter.guild.id)
-        async with aiosqlite.connect("rr.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "rr.db")) as db:
             try:
                 await db.execute("DELETE FROM rr WHERE guild = ?", (guild,))
                 await db.commit()
@@ -868,10 +848,9 @@ class rr:
 
     @staticmethod
     async def clear_one(inter: ApplicationCommandInteraction, dir: str, message_id: int) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guild = str(inter.guild.id)
         message_id = str(message_id)
-        async with aiosqlite.connect("rr.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "rr.db")) as db:
             message_id = message_id.replace(" ", "")
             message_id = message_id.split(",")
             for x in message_id:
@@ -886,12 +865,11 @@ class rr:
 
     @staticmethod
     async def clear_on_message_delete(message: discord.Message, dir: str) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         if message.guild is None:
             return
         guild = str(message.guild.id)
         id = str(message.id)
-        async with aiosqlite.connect("rr.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "rr.db")) as db:
             try:
                 async with db.execute("SELECT msg_id FROM rr WHERE guild = ?", (guild,)) as cursor:
                     async for entry in cursor:
@@ -905,10 +883,9 @@ class rr:
 
     @staticmethod
     async def clear_on_channel_delete(channel: discord.TextChannel, dir: str) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         channel_id = channel.id
         guild = channel.guild.id
-        async with aiosqlite.connect("rr.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "rr.db")) as db:
             try:
                 async with db.execute("SELECT channel FROM rr WHERE guild = ?", (str(guild),)) as cursor:
                     async for entry in cursor:
@@ -923,10 +900,9 @@ class rr:
 
     @staticmethod
     async def clear_on_thread_delete(thread: discord.Thread, dir: str) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         thread_id = thread.id
         guild = thread.guild.id
-        async with aiosqlite.connect("rr.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "rr.db")) as db:
             try:
                 async with db.execute("SELECT channel FROM rr WHERE guild = ?", (str(guild),)) as cursor:
                     async for entry in cursor:
@@ -941,12 +917,11 @@ class rr:
 
     @staticmethod
     async def clear_on_bulk_message_delete(payload: discord.RawBulkMessageDeleteEvent, dir: str) -> None:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         ids = payload.message_ids
         guild = payload.guild_id
         if guild is None:
             return
-        async with aiosqlite.connect("rr.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "rr.db")) as db:
             try:
                 async with db.execute("SELECT msg_id FROM rr WHERE guild = ?", (str(guild),)) as cursor:
                     async for entry in cursor:
@@ -962,9 +937,8 @@ class rr:
     @staticmethod
     async def display(inter: ApplicationCommandInteraction, dir: str) -> None:
         limit = False
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         guild = str(inter.guild.id)
-        async with aiosqlite.connect("rr.db") as db:
+        async with aiosqlite.connect(os.path.join(dir, "rr.db")) as db:
             embed = discord.Embed(title="5 Most Recent Reaction Roles", color=BLUE)
             try:
                 async with db.execute("SELECT msg_id FROM rr WHERE guild = ? GROUP BY msg_id", (guild,)) as cursor:
