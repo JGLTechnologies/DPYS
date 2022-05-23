@@ -35,7 +35,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.2.8"
+version = "5.3.1"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -45,7 +45,7 @@ curse_db: aiosqlite.Connection
 print("We recommend that you read https://jgltechnologies.com/dpys before you use DPYS.")
 
 
-async def setup(bot: commands.InteractionBot, dir: str):
+async def setup(dir: str):
     global warnings_db, muted_db, rr_db, curse_db
     warnings_db = await aiosqlite.connect(os.path.join(dir, "warnings.db"))
     muted_db = await aiosqlite.connect(os.path.join(dir, "muted.db"))
