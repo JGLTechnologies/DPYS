@@ -31,6 +31,22 @@ Install from github
 python -m pip install git+https://github.com/JGLTechnologies/dpys
 ```
 
+Setup
+
+<br>
+
+```python
+import dpys
+from disnake.ext import commands
+import disnake
+
+bot = commands.AutoShardedBot(command_prefix="!")
+TOKEN = "Your Token
+
+bot.loop.create_task(dpys.setup(bot, DIR))
+bot.run()
+```
+
 <br>
 
 Reaction role example
@@ -45,10 +61,9 @@ import disnake
 bot = commands.AutoShardedBot(command_prefix="!")
 TOKEN = "Your Token"
 
-
 # Do not type hint disnake.Role for the role argument
 # Command to create the reaction role
-@commands.slash_command(name="rr")
+@bot.slash_command(name="rr")
 async def reaction_role_command(inter: disnake.ApplicationCommandInteraction, emoji: str = commands.Param(
     description="An emoji or list of emojis"),
                                 role: str = commands.Param(
@@ -63,30 +78,30 @@ async def reaction_role_command(inter: disnake.ApplicationCommandInteraction, em
     Just make sure to separate the emojis and roles with commas and match the position of the roles and emojis.
     """
     await dpys.rr.command(
-        inter, emoji, "Your dir goes here.", role, title, description
+        inter, emoji, role, title, description
     )
 
 
 # Adds role on reaction
 @bot.listen("on_raw_reaction_add")
 async def role_add(payload):
-    await dpys.rr.add(payload, "Your dir goes here.", bot)
+    await dpys.rr.add(payload, bot)
 
 
 # Removes role when reaction is removed
 @bot.listen("on_raw_reaction_remove")
 async def role_remove(payload):
-    await dpys.rr.remove(payload, "Your dir goes here.", bot)
+    await dpys.rr.remove(payload, bot)
 
 
 # Command to list all current reaction roles in the guild
-@commands.slash_command(name="listrr")
+@bot.slash_command(name="listrr")
 async def listrr(inter: disnake.ApplicationCommandInteraction):
-    await dpys.rr.display(inter, "Your dir goes here.")
+    await dpys.rr.display(inter)
 
 
 # Command to remove reaction role info from the database
-@commands.slash_command(name="rrclear")
+@bot.slash_command(name="rrclear")
 async def rrclear(inter: disnake.ApplicationCommandInteraction, id: str = commands.Param(
     description="The id or list of ids of the reaction roles you want to remove")):
     """
@@ -97,41 +112,42 @@ async def rrclear(inter: disnake.ApplicationCommandInteraction, id: str = comman
     """
     id = id.lower()
     if id == "all":
-        await dpys.rr.clear_all(inter, "Your dir goes here.")
+        await dpys.rr.clear_all(inter)
     else:
-        await dpys.rr.clear_one(inter, "Your dir goes here.", int(id))
+        await dpys.rr.clear_one(inter, int(id))
 
 
 # Removes data for a reaction role when its message is deleted. Does not work with channel.purge(). For that you need dpys.rr.clear_on_raw_bulk_message_delete()
 @bot.listen("on_message_delete")
 async def rr_clear_on_message_delete(message):
-    await dpys.rr.clear_on_message_delete(message, "Your dir goes here.")
+    await dpys.rr.clear_on_message_delete(message)
 
 
 # Removes data for a reaction role when its channel is deleted
 @bot.listen("on_channel_delete")
 async def rr_clear_on_channel_delete(channel):
-    await dpys.rr.clear_on_channel_delete(channel, "Your dir goes here.")
+    await dpys.rr.clear_on_channel_delete(channel)
 
 
 # Removes data for a reaction role when its thread is deleted
 @bot.listen("on_thread_delete")
 async def rr_clear_on_thread_delete(thread):
-    await dpys.rr.clear_on_thread_delete(thread, "Your dir goes here.")
+    await dpys.rr.clear_on_thread_delete(thread)
 
 
 # Removes data for a reaction role when its message is deleted in channel.purge()
 @bot.listen("on_raw_bulk_message_delete")
 async def rr_clear_on_raw_bulk_message_delete(payload):
-    await dpys.rr.clear_on_raw_bulk_message_delete(payload, "Your dir goes here.")
+    await dpys.rr.clear_on_raw_bulk_message_delete(payload)
 
 
 # Clears all DPYS data for a guild when it is removed
 @bot.listen("on_guild_remove")
 async def clear_on_guild_remove(guild):
-    await dpys.misc.clear_data_on_guild_remove(guild, "Your dir goes here.")
+    await dpys.misc.clear_data_on_guild_remove(guild)
 
 
+bot.loop.create_task(dpys.setup(bot, DIR))
 bot.run(TOKEN)
 ```
 
@@ -223,14 +239,14 @@ async def clear(inter, amount: int = commands.Param(default=99999999999999999)):
 Add Member:
 
 ```python
-async def mute_add(guild: disnake.Guild, member: disnake.Member, dir: str) -> None
+async def mute_add(guild: disnake.Guild, member: disnake.Member) -> None
 ```
 
 ```python
 @bot.slash_command(name="mute")
 async def mute(inter, member: dicord.Member = commands.Param(), reason: str = commands.Param(default=None)):
 	await dpys.admin.mute(inter, member, MUTE_ROLE_ID, MUTE_REMOVE_ROLE_ID, reason)
-	await dpys.mute_on_join.mute_add(inter.guild, member, DIR)
+	await dpys.mute_on_join.mute_add(inter.guild, member)
 ```
 
 <br>
@@ -238,14 +254,14 @@ async def mute(inter, member: dicord.Member = commands.Param(), reason: str = co
 Remove Member:
 
 ```python
-async def mute_remove(guild: disnake.Guild, member: disnake.Member, dir: str) -> None
+async def mute_remove(guild: disnake.Guild, member: disnake.Member) -> None
 ```
 
 ```python
 @bot.slash_command(name="unmute")
 async def unmute(inter, member: dicord.Member = commands.Param()):
 	await dpys.admin.unmute(inter, member, MUTE_ROLE_ID, MUTE_REMOVE_ROLE_ID)
-	await dpys.mute_on_join.mute_remove(inter.guild, member, DIR)
+	await dpys.mute_on_join.mute_remove(inter.guild, member)
 ```
 
 <br>
@@ -253,13 +269,13 @@ async def unmute(inter, member: dicord.Member = commands.Param()):
 Mute On Join Event Listener:
 
 ```python
-async def mute_on_join(member: disnake.Member, role: int, dir: str) -> None
+async def mute_on_join(member: disnake.Member, role: int) -> None
 ```
 
 ```python
 @bot.listen("on_member_join")
 async def mute_on_join(member: disnake.Member):
-	await dpys.mute_on_join.mute_on_join(member, MUTE_ROLE_ID, DIR)
+	await dpys.mute_on_join.mute_on_join(member, MUTE_ROLE_ID)
 ```
 
 <br>
@@ -267,14 +283,14 @@ async def mute_on_join(member: disnake.Member):
 Manual Unmute Check:
 
 ```python
-async def manual_unmute_check(after: disnake.Member, roleid: int, dir: str) -> None
+async def manual_unmute_check(after: disnake.Member, roleid: int) -> None
 ```
 
 ```python
 import dpys
 @bot.listen("on_member_update")
 async def manual_unmute_check(before: disnake.Member, after: disnake.Member):
-	await dpys.mute_on_join.manual_unmute_check(after, MUTE_ROLE_ID, DIR)
+	await dpys.mute_on_join.manual_unmute_check(after, MUTE_ROLE_ID)
 ```
 
 <br>
@@ -284,14 +300,14 @@ async def manual_unmute_check(before: disnake.Member, after: disnake.Member):
 Command:
 
 ```python
-async def command(inter: disnake.ApplicationCommandInteraction, emoji: str, dir: str, role: str, title: str, description: str) -> None
+async def command(inter: disnake.ApplicationCommandInteraction, emoji: str, role: str, title: str, description: str) -> None
 ```
 
 ```python
 # Don't type hint disnake.Role for the role parameter
 @bot.slash_command(name="rr")
 async def reactionrole(inter, emoji: str = commands.Param(), role: str = commands.Param(), title: str = commands.Param(), description: str = commands.Param()):
-    await dpys.rr.command(inter, emoji, DIR, role, title, description)
+    await dpys.rr.command(inter, emoji, role, title, description)
 ```
 
 <br>
@@ -299,13 +315,13 @@ async def reactionrole(inter, emoji: str = commands.Param(), role: str = command
 Command To List Reaction Roles:
 
 ```python
-async def display(inter: ApplicationCommandInteraction, dir: str) -> None
+async def display(inter: ApplicationCommandInteraction) -> None
 ```
 
 ```python
 @bot.slash_command(name="listrr")
 async def listrr(inter: disnake.ApplicationCommandInteraction):
-    await dpys.rr.display(inter, DIR)
+    await dpys.rr.display(inter)
 ```
 
 <br>
@@ -313,13 +329,13 @@ async def listrr(inter: disnake.ApplicationCommandInteraction):
 On Raw Reaction Add Event Listener:
 
 ```python
-async def add(payload: disnake.RawReactionActionEvent, dir: str, bot: commands.Bot) -> None
+async def add(payload: disnake.RawReactionActionEvent, bot: commands.Bot) -> None
 ```
 
 ```python
 @bot.listen('on_raw_reaction_add')
 async def rr_add(payload: disnake.RawReactionActionEvent):
-    await dpys.rr.add(payload, DIR, bot)
+    await dpys.rr.add(payload, bot)
 ```
 
 <br>
@@ -327,13 +343,13 @@ async def rr_add(payload: disnake.RawReactionActionEvent):
 On Raw Reaction Remove Event Listener:
 
 ```python
-async def remove(payload: disnake.RawReactionActionEvent, dir: str, bot: commands.Bot) -> None
+async def remove(payload: disnake.RawReactionActionEvent, bot: commands.Bot) -> None
 ```
 
 ```python
 @bot.listen('on_raw_reaction_remove')
 async def rr_remove(payload: disnake.RawReactionActionEvent):
-    await dpys.rr.remove(payload, DIR, bot)
+    await dpys.rr.remove(payload, bot)
 ```
 
 <br>
@@ -341,18 +357,18 @@ async def rr_remove(payload: disnake.RawReactionActionEvent):
 Clear Reaction Role command:
 
 ```python
-async def clear_all(inter: disnake.ApplicationCommandInteraction, dir: str) -> None
+async def clear_all(inter: disnake.ApplicationCommandInteraction) -> None
 
-async def clear_one(inter: disnake.ApplicationCommandInteraction, dir: str, message_id: int) -> None
+async def clear_one(inter: disnake.ApplicationCommandInteraction, message_id: int) -> None
 ```
 
 ```python
 @bot.slash_command(name="rrclear")
 async def rrclear(inter, id : str = commands.Param()):
     if id.lower() == "all":
-        await dpys.rr.clear_all(inter, DIR)
+        await dpys.rr.clear_all(inter)
     else:
-        await dpys.rr.clear_one(inter, DIR, id)
+        await dpys.rr.clear_one(inter, id)
 ```
 
 <br>
@@ -362,22 +378,22 @@ Event Listeners To Clear Reaction Role Data:
 ```python
 @bot.listen("on_message_delete")
 async def rr_clear_on_message_delete(message: disnake.Message):
-    await dpys.rr.clear_on_message_delete(message, DIR)
+    await dpys.rr.clear_on_message_delete(message)
 
 
 @bot.listen("on_raw_bulk_message_delete")
 async def rr_clear_on_raw_bulk_message_delete(payload: disnake.RawBulkMessageDeleteEvent):
-    await dpys.rr.clear_on_bulk_message_delete(payload, DIR)
+    await dpys.rr.clear_on_bulk_message_delete(payload)
 
 
 @bot.listen("on_channel_delete")
 async def rr_clear_on_channel_delete(channel: disnake.TextChannel):
-    await dpys.rr.clear_on_channel_delete(channel, DIR)
+    await dpys.rr.clear_on_channel_delete(channel)
 
 
 @bot.listen("on_thread_delete")
 async def rr_clear_on_thread_delete(thread: disnake.Thread):
-    await dpys.rr.clear_on_thread_delete(thread, DIR)
+    await dpys.rr.clear_on_thread_delete(thread)
 ```
 
 <br>
@@ -387,14 +403,14 @@ async def rr_clear_on_thread_delete(thread: disnake.Thread):
 Warn:
 
 ```python
-async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, dir: str, reason: typing.Optional[str] = None) -> None
+async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, reason: typing.Optional[str] = None) -> None
 ```
 
 ```python
 @bot.slash_command(name="warn")
 async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param(),
                reason: str = commands.Param(default=None)):
-    await dpys.warnings.warn(inter, member, DIR, reason)
+    await dpys.warnings.warn(inter, member, reason)
 ```
 
 <br>
@@ -409,7 +425,7 @@ async def unwarn(inter: disnake.ApplicationCommandInteraction, member, dir, numb
 # Pass in "all" as the number parameter to clear all warnings from a member
 @bot.slash_command(name="unwarn")
 async def unwarn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param(), number: str = commands.Param(default="all")):
-	await dpys.warnings.unwarn(inter, member, DIR, number)
+	await dpys.warnings.unwarn(inter, member, number)
 ```
 
 <br>
@@ -417,7 +433,7 @@ async def unwarn(inter: disnake.ApplicationCommandInteraction, member: disnake.M
 Punish:
 
 ```python
-async def punish(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, dir: str,
+async def punish(inter: disnake.ApplicationCommandInteraction, member: disnake.Member,
                      punishments: typing.List[typing.Optional[Punishment]],
                      add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None) -> None
 ```
@@ -426,13 +442,13 @@ async def punish(inter: disnake.ApplicationCommandInteraction, member: disnake.M
 @bot.slash_command(name="warn")
 async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param(),
                reason: str = commands.Param(default=None)):
-    await dpys.warnings.warn(inter, member, DIR, reason)
+    await dpys.warnings.warn(inter, member, reason)
     # This will do nothing for the first 2 warnibgs, but on the third warning it will kick the member.
     # Valid punishments for dpys.warnings.Punishment are kick, ban, mute, temp_ban, temp_mute
     # If you want to mute you have to pass in you mute role id and an optional mute remove role id.
     # For temporary punishments, a duration parameter can be passed into the dpys.warnings.Punishment constructor.
     # This is the number of seconds that the punishment will last.\
-    await dpys.warnings.punish(inter, member, DIR,
+    await dpys.warnings.punish(inter, member,
                            [None, None, dpys.warnings.Punishment("kick")])
 ```
 
@@ -454,19 +470,19 @@ class DpysLoops(commands.Cog):
     
     @tasks.loop(seconds=1)
     async def dpys_tempmute_loop(self):
-        await dpys.warnings.temp_mute_loop(DIR, self.bot, GET_MUTE_ROLE_ID, GET_MUTE_REMOVE_ROLE_ID)
+        await dpys.warnings.temp_mute_loop(self.bot, GET_MUTE_ROLE_ID, GET_MUTE_REMOVE_ROLE_ID)
     
-        @dpys_tempmute_loop.before_loop
-        async def before_dpys_tempmute_loop(self):
-            await self.bot.wait_until_ready()
-    
-        @tasks.loop(seconds=1)
-        async def dpys_tempban_loop(self):
-            await dpys.warnings.temp_ban_loop(DIR, self.bot)
-    
-        @dpys_tempban_loop.before_loop
-        async def before_dpys_tempban_loop(self):
-            await self.bot.wait_until_ready()
+    @dpys_tempmute_loop.before_loop
+    async def before_dpys_tempmute_loop(self):
+        await self.bot.wait_until_ready()
+
+    @tasks.loop(seconds=1)
+    async def dpys_tempban_loop(self):
+        await dpys.warnings.temp_ban_loop(self.bot)
+
+    @dpys_tempban_loop.before_loop
+    async def before_dpys_tempban_loop(self):
+        await self.bot.wait_until_ready()
             
 def setup(bot):
     bot.add_cog(DpysLoops(bot))
@@ -477,13 +493,13 @@ def setup(bot):
 Warnings:
 
 ```python
-async def warnings_list(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, dir: str) -> None
+async def warnings_list(inter: disnake.ApplicationCommandInteraction, member: disnake.Member) -> None
 ```
 
 ```python
 @bot.slash_command(name="warnings")
     async def warnings(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param()):
-        await dpys.warnings.warnings_list(inter, member, DIR)
+        await dpys.warnings.warnings_list(inter, member)
 ```
 
 <br>
@@ -493,13 +509,13 @@ async def warnings_list(inter: disnake.ApplicationCommandInteraction, member: di
 Add Word:
 
 ```python
-async def add_banned_word(inter: disnake.ApplicationCommandInteraction, word: str, dir: str) -> None
+async def add_banned_word(inter: disnake.ApplicationCommandInteraction, word: str) -> None
 ```
 
 ```python
 @bot.slash_command(name="addword")
 async def add_word(inter: disnake.ApplicationCommandInteraction, curses: str = commands.Param()):
-    await dpys.curse.add_banned_word(inter, curses, DIR)
+    await dpys.curse.add_banned_word(inter, curses)
 ```
 
 <br>
@@ -507,13 +523,13 @@ async def add_word(inter: disnake.ApplicationCommandInteraction, curses: str = c
 Remove Word:
 
 ```python
-async def remove_banned_word(inter: disnake.ApplicationCommandInteraction, word: str, dir: str) -> None
+async def remove_banned_word(inter: disnake.ApplicationCommandInteraction, word: str) -> None
 ```
 
 ```python
 @bot.slash_command(name="removeword")
 async def remove_word(inter: disnake.ApplicationCommandInteraction, curses: str = commands.Param()):
-    await dpys.curse.remove_banned_word(inter, curses, DIR)
+    await dpys.curse.remove_banned_word(inter, curses)
 ```
 
 <br>
@@ -521,13 +537,13 @@ async def remove_word(inter: disnake.ApplicationCommandInteraction, curses: str 
 Clear Words:
 
 ```python
-async def clear_words(inter: disnake.ApplicationCommandInteraction, dir: str) -> None
+async def clear_words(inter: disnake.ApplicationCommandInteraction) -> None
 ```
 
 ```python
 @bot.slash_command(name="clearwords")
 async def clear_words(inter: disnake.ApplicationCommandInteraction):
-    await dpys.curse.clear_words(inter, DIR)
+    await dpys.curse.clear_words(inter)
 ```
 
 <br>
@@ -554,7 +570,7 @@ Clear DPYS Data On Guild Remove:
 ```python
 @bot.listen("on_guild_remove")
 async def clear_dpys_data(guild: disnake.Guild):
-	await dpys.misc.clear_data_on_guild_remove(guild, DIR)
+	await dpys.misc.clear_data_on_guild_remove(guild)
 ```
 
 
