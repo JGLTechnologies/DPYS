@@ -22,8 +22,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-
+import contextlib
 import os
+import sqlite3
 import typing
 import disnake as discord
 import datetime
@@ -71,38 +72,26 @@ class misc:
 
     @staticmethod
     async def clear_data_on_guild_remove(guild: discord.Guild) -> None:
-        try:
+        with contextlib.suppress(sqlite3.Error):
             await warnings_db.execute("DELETE FROM tempmute WHERE guild = ?", (str(guild.id),))
-        except:
-            pass
 
-        try:
+        with contextlib.suppress(sqlite3.Error):
             await warnings_db.execute("DELETE FROM tempban WHERE guild = ?", (str(guild.id),))
-        except:
-            pass
 
-        try:
+        with contextlib.suppress(sqlite3.Error):
             await warnings_db.execute("DELETE FROM warnings WHERE guild = ?", (str(guild.id),))
-        except:
-            pass
         await warnings_db.commit()
 
-        try:
+        with contextlib.suppress(sqlite3.Error):
             await rr_db.execute("DELETE FROM rr WHERE guild = ?", (str(guild.id),))
-        except:
-            pass
         await rr_db.commit()
 
-        try:
+        with contextlib.suppress(sqlite3.Error):
             await muted_db.execute("DELETE FROM muted WHERE guild = ?", (str(guild.id),))
-        except:
-            pass
         await muted_db.commit()
 
-        try:
+        with contextlib.suppress(sqlite3.Error):
             await curse_db.execute("DELETE FROM curses WHERE guild = ?", (str(guild.id),))
-        except:
-            pass
         await curse_db.commit()
 
 
@@ -122,10 +111,8 @@ class admin:
                 return
             await member.add_roles(inter.guild.get_role(role_add))
             if role_remove is not None:
-                try:
+                with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                     await member.remove_roles(inter.guild.get_role(role_remove))
-                except:
-                    pass
             if reason is None:
                 await inter.response.send_message(f"Muted {str(member)}.", ephemeral=EPHEMERAL)
             else:
@@ -144,10 +131,8 @@ class admin:
                 return
             await member.remove_roles(inter.guild.get_role(role_remove))
             if role_add is not None:
-                try:
+                with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                     await member.add_roles(inter.guild.get_role(role_add))
-                except:
-                    pass
             await inter.response.send_message(f"Unmuted {member.name}#{member.discriminator}.", ephemeral=EPHEMERAL)
 
     @staticmethod
@@ -234,7 +219,7 @@ class curse:
         words = word.replace(" ", "")
         words = words.split(",")
         words = set(words)
-        curses = await utils.GuildData.curse_set(inter.guild.id, dir)
+        curses = await utils.GuildData.curse_set(inter.guild.id)
         for x in words:
             if x in curses:
                 msg = f"{x} is already in the list."
@@ -367,28 +352,23 @@ class mute_on_join:
         guildid = str(guild.id)
         member = str(member.id)
         db = muted_db
-        try:
-            await db.execute(f"""CREATE TABLE if NOT EXISTS muted(
-            name TEXT,
-            guild TEXT,
-            PRIMARY KEY (name,guild)
-            )""")
-            await db.commit()
-            await db.execute("INSERT INTO muted (name,guild) VALUES (?,?)", (member, guildid))
-            await db.commit()
-        except:
-            pass
+        await db.execute(f"""CREATE TABLE if NOT EXISTS muted(
+        name TEXT,
+        guild TEXT,
+        PRIMARY KEY (name,guild)
+        )""")
+        await db.commit()
+        await db.execute("INSERT INTO muted (name,guild) VALUES (?,?)", (member, guildid))
+        await db.commit()
 
     @staticmethod
     async def mute_remove(guild: discord.Guild, member: discord.Member) -> None:
         member = str(member.id)
         guildid = str(guild.id)
         db = muted_db
-        try:
+        with contextlib.suppress(sqlite3.Error):
             await db.execute("DELETE FROM muted WHERE name = ? and guild = ?", (member, guildid))
             await db.commit()
-        except:
-            pass
 
     @staticmethod
     async def mute_on_join(member: discord.Member, role: int) -> None:
@@ -399,13 +379,12 @@ class mute_on_join:
             return
         member = str(member.id)
         db = muted_db
-        try:
+        with contextlib.suppress(sqlite3.Error):
             async with db.execute("SELECT name FROM muted WHERE guild = ?", (guildid,)) as cursor:
                 async for entry in cursor:
                     if entry[0] == member:
-                        await user.add_roles(muted_role)
-        except:
-            pass
+                        with contextlib.suppress(discord.Forbidden, discord.HTTPException):
+                            await user.add_roles(muted_role)
 
     @staticmethod
     async def manual_unmute_check(after: discord.Member, roleid: int) -> None:
@@ -415,12 +394,10 @@ class mute_on_join:
         guildid = str(after.guild.id)
         role = after.guild.get_role(roleid)
         memberid = str(after.id)
-        try:
+        with contextlib.suppress(sqlite3.Error):
             if role not in after.roles:
                 await db.execute("DELETE FROM muted WHERE guild = ? and name = ?", (guildid, memberid))
                 await db.commit()
-        except:
-            pass
 
 
 class warnings:
@@ -486,7 +463,7 @@ class warnings:
                     await inter.response.send_message(embed=embed, ephemeral=EPHEMERAL)
                 else:
                     await inter.response.send_message(f"{user.name}#{user.discriminator} has no warnings.",
-                                                          ephemeral=EPHEMERAL)
+                                                      ephemeral=EPHEMERAL)
         except:
             await inter.response.send_message(f"{user.name}#{user.discriminator} has no warnings.", ephemeral=EPHEMERAL)
 
@@ -611,21 +588,17 @@ class warnings:
                     return
                 else:
                     time = punishments[warnings_number - 1].duration
-                    try:
+                    with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                         await member.add_roles(add_role)
-                    except:
-                        pass
                     if remove_role is not None:
-                        try:
+                        with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                             await member.remove_roles(remove_role)
-                        except:
-                            pass
-                    await mute_on_join.mute_add(inter.guild, member, dir)
+                    await mute_on_join.mute_add(inter.guild, member)
                     time = datetime.datetime.now() + datetime.timedelta(seconds=time)
-                    await db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)",
-                                     (guild, memberid, time))
-                    await db.commit()
-                    return
+                    with contextlib.suppress(sqlite3.Error):
+                        await db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)",
+                                         (guild, memberid, time))
+                        await db.commit()
         else:
             if punishments[warnings_number - 1].punishment == "ban":
                 await member.ban(reason=f"You have received {warnings_number} warnings.")
@@ -639,90 +612,69 @@ class warnings:
                 if not isinstance(add_role, discord.Role):
                     return
                 if remove_role is not None:
-                    try:
+                    with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                         await member.remove_roles(remove_role)
-                    except:
-                        pass
                 if add_role is not None:
-                    try:
+                    with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                         await member.add_roles(add_role)
-                    except:
-                        pass
-                await mute_on_join.mute_add(inter.guild, member, dir)
+                await mute_on_join.mute_add(inter.guild, member)
 
     @staticmethod
-    async def temp_mute_loop(dir: str, bot: commands.Bot, add_role_func: typing.Awaitable,
+    async def temp_mute_loop(bot: commands.Bot, add_role_func: typing.Awaitable,
                              remove_role_func: typing.Optional[typing.Awaitable] = None) -> None:
         db = warnings_db
-        try:
+        with contextlib.suppress(sqlite3.Error):
             async with db.execute("SELECT guild,member,time FROM tempmute") as cursor:
                 async for entry in cursor:
                     guild_id, member_id, time_str = entry
-                    try:
-                        guild = bot.get_guild(int(guild_id))
-                        if not isinstance(guild, discord.Guild):
-                            await db.execute("DELETE FROM tempmute WHERE guild = ?", (str(guild_id),))
-                            await db.commit()
-                            continue
-                        member = guild.get_member(int(member_id))
-                        if not isinstance(member, discord.Member):
-                            await db.execute("DELETE FROM tempmute WHERE guild = ? and member = ?",
-                                             (str(guild_id), str(member_id)))
-                            await db.commit()
-                            continue
-                        time = datetime.datetime.fromisoformat(time_str)
-                        role_add = await add_role_func(int(guild_id))
-                        if remove_role_func is None:
-                            role_remove = None
-                        else:
-                            role_remove = await remove_role_func(int(guild_id))
-                        if datetime.datetime.now() >= time:
-                            if role_add is not None:
-                                try:
-                                    await member.add_roles(guild.get_role(int(role_remove)))
-                                except:
-                                    pass
-                                try:
-                                    await member.remove_roles(guild.get_role(int(role_add)))
-                                except:
-                                    pass
+                    guild = bot.get_guild(int(guild_id))
+                    if not isinstance(guild, discord.Guild):
+                        await db.execute("DELETE FROM tempmute WHERE guild = ?", (str(guild_id),))
+                        await db.commit()
+                        continue
+                    member = guild.get_member(int(member_id))
+                    if not isinstance(member, discord.Member):
+                        await db.execute("DELETE FROM tempmute WHERE guild = ? and member = ?",
+                                         (str(guild_id), str(member_id)))
+                        await db.commit()
+                        continue
+                    time = datetime.datetime.fromisoformat(time_str)
+                    role_add = await add_role_func(int(guild_id))
+                    if remove_role_func is None:
+                        role_remove = None
+                    else:
+                        role_remove = await remove_role_func(int(guild_id))
+                    if datetime.datetime.now() >= time:
+                        if role_add is not None:
+                            with contextlib.suppress(discord.Forbidden, discord.HTTPException):
+                                await member.add_roles(guild.get_role(int(role_remove)))
+                            with contextlib.suppress(discord.Forbidden, discord.HTTPException):
+                                await member.remove_roles(guild.get_role(int(role_add)))
+                        with contextlib.suppress(sqlite3.Error):
                             await db.execute("DELETE FROM tempmute WHERE guild = ? and member = ? and time = ?",
                                              (str(guild.id), str(member.id), time_str))
                             await db.commit()
-                            await mute_on_join.mute_remove(guild, member, dir)
-                    except:
-                        continue
-        except:
-            pass
+                        await mute_on_join.mute_remove(guild, member)
 
     @staticmethod
-    async def temp_ban_loop(dir: str, bot: commands.Bot) -> None:
+    async def temp_ban_loop(bot: commands.Bot) -> None:
         db = warnings_db
-        try:
+        with contextlib.suppress(sqlite3.Error):
             async with db.execute("SELECT guild,member,time FROM tempban") as cursor:
                 async for entry in cursor:
                     guild_id, member, time_str = entry
-                    try:
-                        guild = bot.get_guild(int(guild_id))
-                        if not isinstance(guild, discord.Guild):
-                            await db.execute("DELETE FROM tempban WHERE guild = ?", (str(guild_id),))
-                            await db.commit()
-                            continue
-                        time = datetime.datetime.fromisoformat(time_str)
-                        if datetime.datetime.now() >= time:
-                            await db.execute("DELETE FROM tempban WHERE guild = ? and member = ? and time = ?",
-                                             (str(guild.id), str(member), time_str))
-                            await db.commit()
-                            try:
-                                await guild.unban(discord.Object(id=int(member)))
-                            except:
-                                await db.execute("DELETE FROM tempban WHERE guild = ? and member = ?",
-                                                 (str(guild.id), str(member)))
-                                await db.commit()
-                    except:
-                        pass
-        except:
-            pass
+                    guild = bot.get_guild(int(guild_id))
+                    if not isinstance(guild, discord.Guild):
+                        await db.execute("DELETE FROM tempban WHERE guild = ?", (str(guild_id),))
+                        await db.commit()
+                        continue
+                    time = datetime.datetime.fromisoformat(time_str)
+                    if datetime.datetime.now() >= time:
+                        await db.execute("DELETE FROM tempban WHERE guild = ? and member = ? and time = ?",
+                                         (str(guild.id), str(member), time_str))
+                        await db.commit()
+                        with contextlib.suppress(discord.Forbidden, discord.HTTPException):
+                            await guild.unban(discord.Object(id=int(member)))
 
 
 class rr:
@@ -813,16 +765,15 @@ class rr:
             return
         db = rr_db
         guild = bot.get_guild(payload.guild_id)
-        try:
+        with contextlib.suppress(sqlite3.Error):
             async with db.execute("SELECT emoji,role FROM rr WHERE guild = ? and msg_id = ?",
                                   (str(guild.id), str(payload.message_id))) as cursor:
                 async for entry in cursor:
                     emoji, role = entry
                     role = guild.get_role(int(role))
                     if str(payload.emoji) == emoji:
-                        await payload.member.add_roles(role)
-        except:
-            pass
+                        with contextlib.suppress(discord.Forbidden, discord.HTTPException):
+                            await payload.member.add_roles(role)
 
     @staticmethod
     async def remove(payload: discord.RawReactionActionEvent, bot: commands.Bot) -> None:
@@ -833,16 +784,15 @@ class rr:
         if member.bot:
             return
         db = rr_db
-        try:
+        with contextlib.suppress(sqlite3.Error):
             async with db.execute("SELECT emoji,role FROM rr WHERE guild = ? and msg_id = ?",
                                   (str(guild.id), str(payload.message_id))) as cursor:
                 async for entry in cursor:
                     emoji, role = entry
                     role = guild.get_role(int(role))
                     if str(payload.emoji) == emoji:
-                        await member.remove_roles(role)
-        except:
-            pass
+                        with contextlib.suppress(discord.Forbidden, discord.HTTPException):
+                            await member.remove_roles(role)
 
     @staticmethod
     async def clear_all(inter: ApplicationCommandInteraction) -> None:
@@ -880,7 +830,7 @@ class rr:
         db = rr_db
         guild = str(message.guild.id)
         id = str(message.id)
-        try:
+        with contextlib.suppress(sqlite3.Error):
             async with db.execute("SELECT msg_id FROM rr WHERE guild = ?", (guild,)) as cursor:
                 async for entry in cursor:
                     msg_id = entry[0]
@@ -888,15 +838,13 @@ class rr:
                         await db.execute("DELETE FROM rr WHERE msg_id = ? and guild = ?", (msg_id, guild))
                         await db.commit()
                         return
-        except:
-            pass
 
     @staticmethod
     async def clear_on_channel_delete(channel: discord.TextChannel) -> None:
         channel_id = channel.id
         guild = channel.guild.id
         db = rr_db
-        try:
+        with contextlib.suppress(sqlite3.Error):
             async with db.execute("SELECT channel FROM rr WHERE guild = ?", (str(guild),)) as cursor:
                 async for entry in cursor:
                     channel = int(entry[0])
@@ -905,15 +853,13 @@ class rr:
                                          (str(guild), str(channel)))
                         await db.commit()
                         break
-        except:
-            pass
 
     @staticmethod
     async def clear_on_thread_delete(thread: discord.Thread) -> None:
         thread_id = thread.id
         guild = thread.guild.id
         db = rr_db
-        try:
+        with contextlib.suppress(sqlite3.Error):
             async with db.execute("SELECT channel FROM rr WHERE guild = ?", (str(guild),)) as cursor:
                 async for entry in cursor:
                     channel = int(entry[0])
@@ -922,8 +868,6 @@ class rr:
                                          (str(guild), str(channel)))
                         await db.commit()
                         break
-        except:
-            pass
 
     @staticmethod
     async def clear_on_bulk_message_delete(payload: discord.RawBulkMessageDeleteEvent) -> None:
@@ -932,7 +876,7 @@ class rr:
         if guild is None:
             return
         db = rr_db
-        try:
+        with contextlib.suppress(sqlite3.Error):
             async with db.execute("SELECT msg_id FROM rr WHERE guild = ?", (str(guild),)) as cursor:
                 async for entry in cursor:
                     msg_id = int(entry[0])
@@ -941,8 +885,6 @@ class rr:
                             await db.execute("DELETE FROM rr WHERE guild = ? and msg_id = ?",
                                              (str(guild), str(msg_id)))
             await db.commit()
-        except:
-            pass
 
     @staticmethod
     async def display(inter: ApplicationCommandInteraction) -> None:
@@ -950,44 +892,41 @@ class rr:
         guild = str(inter.guild.id)
         db = rr_db
         embed = discord.Embed(title="5 Most Recent Reaction Roles", color=BLUE)
-        try:
+        with contextlib.suppress(sqlite3.Error):
             async with db.execute("SELECT msg_id FROM rr WHERE guild = ? GROUP BY msg_id", (guild,)) as cursor:
                 number = 0
                 async for entry in cursor:
-                    try:
-                        async with db.execute(
-                                "SELECT role,emoji,channel,msg_id FROM rr WHERE guild = ? and msg_id = ?",
-                                (guild, entry[0])) as f:
-                            msg = ""
-                            msg_limit = ""
-                            async for entry in f:
-                                role, emoji, channel, msg_id = entry
-                                channel = inter.guild.get_channel(
-                                    int(channel))
-                                role = inter.guild.get_role(int(role))
-                                try:
-                                    role = f"@{role.name}"
-                                except:
-                                    role = "@deleted-role"
-                                try:
-                                    channel = f"#{channel.name}"
-                                except:
-                                    channel = "#deleted-channel"
-                                msg += f"Emoji: {emoji} Role: {role}\n"
-                            msg_limit += f"Channel: {channel} \nMessage ID: {msg_id}\n"
-                            msg += f"Channel: {channel} \nMessage ID: {msg_id}\n"
-                            number += 1
-                        if number < 6:
-                            if len(msg) > 1010:
-                                embed.add_field(
-                                    name=f"Reaction Role #{number}", inline=False, value=msg_limit)
-                                limit = True
-                            else:
-                                limit = False
-                                embed.add_field(
-                                    name=f"Reaction Role #{number}", inline=False, value=msg)
-                    except:
-                        continue
+                    async with db.execute(
+                            "SELECT role,emoji,channel,msg_id FROM rr WHERE guild = ? and msg_id = ?",
+                            (guild, entry[0])) as f:
+                        msg = ""
+                        msg_limit = ""
+                        async for entry in f:
+                            role, emoji, channel, msg_id = entry
+                            channel = inter.guild.get_channel(
+                                int(channel))
+                            role = inter.guild.get_role(int(role))
+                            try:
+                                role = f"@{role.name}"
+                            except:
+                                role = "@deleted-role"
+                            try:
+                                channel = f"#{channel.name}"
+                            except:
+                                channel = "#deleted-channel"
+                            msg += f"Emoji: {emoji} Role: {role}\n"
+                        msg_limit += f"Channel: {channel} \nMessage ID: {msg_id}\n"
+                        msg += f"Channel: {channel} \nMessage ID: {msg_id}\n"
+                        number += 1
+                    if number < 6:
+                        if len(msg) > 1010:
+                            embed.add_field(
+                                name=f"Reaction Role #{number}", inline=False, value=msg_limit)
+                            limit = True
+                        else:
+                            limit = False
+                            embed.add_field(
+                                name=f"Reaction Role #{number}", inline=False, value=msg)
             if number > 0:
                 if limit:
                     embed.set_footer(
@@ -1001,5 +940,3 @@ class rr:
             else:
                 msg = "There are no reaction roles in this server."
                 await inter.response.send_message(msg, ephemeral=EPHEMERAL)
-        except:
-            pass

@@ -11,7 +11,7 @@ DPYS_DBS = ["warnings.db", "curse.db", "rr.db", "muted.db"]
 
 class GuildData:
     @staticmethod
-    async def curse_set(guild_id: int, dir: str) -> set:
+    async def curse_set(guild_id: int) -> set:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         curse_set = set()
         async with aiosqlite.connect("curse.db") as db:
