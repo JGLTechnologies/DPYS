@@ -36,7 +36,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.3.5"
+version = "5.3.6"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -639,9 +639,9 @@ class warnings:
                     else:
                         role_remove = await remove_role_func(int(guild_id))
                     if datetime.datetime.now() >= time:
+                        with contextlib.suppress(discord.Forbidden, discord.HTTPException):
+                            await member.add_roles(guild.get_role(int(role_remove)))
                         if role_add is not None:
-                            with contextlib.suppress(discord.Forbidden, discord.HTTPException):
-                                await member.add_roles(guild.get_role(int(role_remove)))
                             with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                                 await member.remove_roles(guild.get_role(int(role_add)))
                         with contextlib.suppress(sqlite3.Error):
