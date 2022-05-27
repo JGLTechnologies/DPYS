@@ -12,7 +12,7 @@ REQUIREMENTS = [
     "disnake",
 ]
 DOCS = "https://jgltechnologies.com/dpys"
-VERSION = "5.3.6"
+VERSION = "5.3.7"
 
 classifiers = [
     "Development Status :: 4 - Beta",

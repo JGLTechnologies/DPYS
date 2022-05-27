@@ -25,6 +25,7 @@ SOFTWARE.
 import contextlib
 import os
 import sqlite3
+from typing import *
 import typing
 import disnake as discord
 import datetime
@@ -36,7 +37,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.3.6"
+version = "5.3.7"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -614,8 +615,8 @@ class warnings:
                 await mute_on_join.mute_add(inter.guild, member)
 
     @staticmethod
-    async def temp_mute_loop(bot: commands.Bot, add_role_func: typing.Awaitable,
-                             remove_role_func: typing.Optional[typing.Awaitable] = None) -> None:
+    async def temp_mute_loop(bot: commands.Bot, add_role_func: Callable[[int], Awaitable[Optional[int]]],
+                             remove_role_func: Optional[Callable[[int], Awaitable[Optional[int]]]] = None) -> None:
         db = warnings_db
         with contextlib.suppress(sqlite3.Error):
             async with db.execute("SELECT guild,member,time FROM tempmute") as cursor:
