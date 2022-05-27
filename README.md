@@ -434,7 +434,7 @@ Punish:
 
 ```python
 async def punish(inter: disnake.ApplicationCommandInteraction, member: disnake.Member,
-                     punishments: typing.List[typing.Optional[Punishment]],
+                     punishments: typing.Mapping[int, Punishment],
                      add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None) -> None
 ```
 
@@ -443,13 +443,13 @@ async def punish(inter: disnake.ApplicationCommandInteraction, member: disnake.M
 async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param(),
                reason: str = commands.Param(default=None)):
     await dpys.warnings.warn(inter, member, reason)
-    # This will do nothing for the first 2 warnibgs, but on the third warning it will kick the member.
+    # This will do nothing for the first 2 warnings, but on the third warning it will kick the member.
     # Valid punishments for dpys.warnings.Punishment are kick, ban, mute, temp_ban, temp_mute
     # If you want to mute you have to pass in you mute role id and an optional mute remove role id.
     # For temporary punishments, a duration parameter can be passed into the dpys.warnings.Punishment constructor.
-    # This is the number of seconds that the punishment will last.\
+    # This is the number of seconds that the punishment will last.
     await dpys.warnings.punish(inter, member,
-                           [None, None, dpys.warnings.Punishment("kick")])
+                               {3: dpys.warnings.Punishment("kick")})
 ```
 
 <br>
@@ -460,8 +460,8 @@ If you want to use temporary punishments, then include this cog in your bot.
 from disnake.ext import commands, tasks
 import dpys
 
-GET_MUTE_ROLE_ID = "an async function that takes in a guild id and returns the id for you mute role"
-GET_MUTE_REMOVE_ROLE_ID = "an async function that takes in a guild id and returns the id for you mute remove role"
+GET_MUTE_ROLE_ID = "an async function that takes in a guild id and returns the id for your mute role"
+GET_MUTE_REMOVE_ROLE_ID = "an async function that takes in a guild id and returns the id for your mute remove role"
 
 class DpysLoops(commands.Cog):
     def __init__(self, bot):

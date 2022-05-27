@@ -36,7 +36,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.3.1"
+version = "5.3.5"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -540,7 +540,7 @@ class warnings:
 
     @staticmethod
     async def punish(inter: ApplicationCommandInteraction, member: discord.Member,
-                     punishments: typing.List[typing.Optional[Punishment]],
+                     punishments: typing.Mapping[int, Punishment],
                      add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None) -> None:
         memberid = str(member.id)
         guild = str(inter.guild.id)
@@ -564,15 +564,11 @@ class warnings:
                     warnings_number += 1
         except:
             return
-
-        try:
-            if punishments[warnings_number - 1] is None:
-                return
-        except:
+        if warnings_number not in punishments:
             return
-        if punishments[warnings_number - 1].duration is not None:
-            if punishments[warnings_number - 1].punishment == "temp_ban":
-                time = punishments[warnings_number - 1].duration
+        if punishments[warnings_number].duration is not None:
+            if punishments[warnings_number].punishment == "temp_ban":
+                time = punishments[warnings_number].duration
                 await member.ban(reason=f"You have received {warnings_number} warnings.")
                 time = datetime.datetime.now() + datetime.timedelta(seconds=time)
                 await db.execute("INSERT INTO tempban (guild,member,time) VALUES (?,?,?)",
@@ -587,7 +583,7 @@ class warnings:
                 if add_role in member.roles:
                     return
                 else:
-                    time = punishments[warnings_number - 1].duration
+                    time = punishments[warnings_number].duration
                     with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                         await member.add_roles(add_role)
                     if remove_role is not None:
@@ -600,23 +596,21 @@ class warnings:
                                          (guild, memberid, time))
                         await db.commit()
         else:
-            if punishments[warnings_number - 1].punishment == "ban":
+            if punishments[warnings_number].punishment == "ban":
                 await member.ban(reason=f"You have received {warnings_number} warnings.")
                 return
-            if punishments[warnings_number - 1].punishment == "kick":
+            if punishments[warnings_number].punishment == "kick":
                 await member.kick(reason=f"You have received {warnings_number} warnings.")
                 return
-            if punishments[warnings_number - 1].punishment == "mute":
+            if punishments[warnings_number].punishment == "mute":
                 add_role = inter.guild.get_role(add_role)
                 remove_role = inter.guild.get_role(remove_role)
                 if not isinstance(add_role, discord.Role):
                     return
                 if remove_role is not None:
-                    with contextlib.suppress(discord.Forbidden, discord.HTTPException):
-                        await member.remove_roles(remove_role)
+                    await member.remove_roles(remove_role)
                 if add_role is not None:
-                    with contextlib.suppress(discord.Forbidden, discord.HTTPException):
-                        await member.add_roles(add_role)
+                    await member.add_roles(add_role)
                 await mute_on_join.mute_add(inter.guild, member)
 
     @staticmethod
@@ -888,7 +882,6 @@ class rr:
 
     @staticmethod
     async def display(inter: ApplicationCommandInteraction) -> None:
-        limit = False
         guild = str(inter.guild.id)
         db = rr_db
         embed = discord.Embed(title="5 Most Recent Reaction Roles", color=BLUE)
@@ -922,20 +915,12 @@ class rr:
                         if len(msg) > 1010:
                             embed.add_field(
                                 name=f"Reaction Role #{number}", inline=False, value=msg_limit)
-                            limit = True
                         else:
-                            limit = False
                             embed.add_field(
                                 name=f"Reaction Role #{number}", inline=False, value=msg)
             if number > 0:
-                if limit:
-                    embed.set_footer(
-                        text=f"Total Reaction Roles | {number}")
-                    msg = "One of your reaction roles went over the Discord limit. It will still work perfectly but only essential data will be displayed in this command to save space."
-                    await inter.followup.send(msg, ephemeral=EPHEMERAL)
-                else:
-                    embed.set_footer(
-                        text=f"Total Reaction Roles | {number}")
+                embed.set_footer(
+                    text=f"Total Reaction Roles | {number}")
                 await inter.response.send_message(embed=embed, ephemeral=EPHEMERAL)
             else:
                 msg = "There are no reaction roles in this server."
