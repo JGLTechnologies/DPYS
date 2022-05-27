@@ -458,6 +458,7 @@ If you want to use temporary punishments, then include this cog in your bot.
 
 ```python
 from disnake.ext import commands, tasks
+import dpys
 
 GET_MUTE_ROLE_ID = "an async function that takes in a guild id and returns the id for you mute role"
 GET_MUTE_REMOVE_ROLE_ID = "an async function that takes in a guild id and returns the id for you mute remove role"
@@ -465,8 +466,8 @@ GET_MUTE_REMOVE_ROLE_ID = "an async function that takes in a guild id and return
 class DpysLoops(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        dpys_tempmute_loop.start()
-        dpys_tempban_loop.start()
+        self.dpys_tempmute_loop.start()
+        self.dpys_tempban_loop.start()
     
     @tasks.loop(seconds=1)
     async def dpys_tempmute_loop(self):
