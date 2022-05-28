@@ -18,7 +18,6 @@ def get_discord_date(ts: float = None):
 class GuildData:
     @staticmethod
     async def curse_set(guild_id: int, db: aiosqlite.Connection) -> set:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         curse_set = set()
         try:
             async with db.execute(
@@ -55,7 +54,6 @@ class BotData:
 
     @staticmethod
     async def dpys_storage_size(dir: str) -> dict:
-        await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         root_directory = Path(dir)
         size = sum(
             f.stat().st_size
