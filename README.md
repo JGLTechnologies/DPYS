@@ -481,7 +481,7 @@ Punish:
 async def punish(inter: ApplicationCommandInteraction, member: discord.Member,
                      punishments: typing.Mapping[int, Punishment],
                      add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None,
-                     before: Optional[Callable[[int, Punishment, discord.Member], Awaitable[None]]] = None) -> None:
+                     before: Optional[Callable[[int, Punishment, discord.Member], Awaitable[Optional[Member]]]] = None) -> None:
 ```
 
 ```python

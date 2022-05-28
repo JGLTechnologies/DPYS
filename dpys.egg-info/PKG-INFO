@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: dpys
-Version: 5.4.1
+Version: 5.4.2
 Summary: A library to simplify discord.py
 Home-page: https://jgltechnologies.com/dpys
 Author: George Luca
@@ -498,7 +498,7 @@ Punish:
 async def punish(inter: ApplicationCommandInteraction, member: discord.Member,
                      punishments: typing.Mapping[int, Punishment],
                      add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None,
-                     before: Optional[Callable[[int, Punishment, discord.Member], Awaitable[None]]] = None) -> None:
+                     before: Optional[Callable[[int, Punishment, discord.Member], Awaitable[Optional[Member]]]] = None) -> None:
 ```
 
 ```python

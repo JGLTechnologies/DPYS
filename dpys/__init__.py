@@ -27,6 +27,8 @@ import os
 import sqlite3
 from typing import *
 import typing
+
+import discord
 import disnake as discord
 import datetime
 import aiosqlite
@@ -37,7 +39,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.4.1"
+version = "5.4.2"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -555,7 +557,7 @@ class warnings:
     async def punish(inter: ApplicationCommandInteraction, member: discord.Member,
                      punishments: typing.Mapping[int, Punishment],
                      add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None,
-                     before: Optional[Callable[[int, Punishment, discord.Member], Awaitable[None]]] = None) -> None:
+                     before: Optional[Callable[[int, Punishment, discord.Member], Awaitable[Optional[discord.Message]]]] = None) -> None:
         memberid = str(member.id)
         guild = str(inter.guild.id)
         db = warnings_db
@@ -582,13 +584,18 @@ class warnings:
             return
         if punishments[warnings_number].duration is not None:
             if punishments[warnings_number].punishment == "temp_ban":
+                msg = await before(warnings_number, punishments[warnings_number], member)
                 time = punishments[warnings_number].duration
-                await member.ban(reason=f"You have received {warnings_number} warnings.")
+                try:
+                    await member.ban(reason=f"You have received {warnings_number} warnings.")
+                except (discord.Forbidden, discord.HTTPException):
+                    with contextlib.suppress(Exception):
+                        await msg.delete()
                 time = datetime.datetime.now() + datetime.timedelta(seconds=time)
                 await db.execute("INSERT INTO tempban (guild,member,time) VALUES (?,?,?)",
                                  (guild, memberid, time))
                 await db.commit()
-                await before(warnings_number, punishments[warnings_number], member)
+
                 return
             else:
                 add_role = inter.guild.get_role(add_role)
@@ -612,12 +619,20 @@ class warnings:
                     await before(warnings_number, punishments[warnings_number], member)
         else:
             if punishments[warnings_number].punishment == "ban":
-                await member.ban(reason=f"You have received {warnings_number} warnings.")
-                await before(warnings_number, punishments[warnings_number], member)
+                msg = await before(warnings_number, punishments[warnings_number], member)
+                try:
+                    await member.ban(reason=f"You have received {warnings_number} warnings.")
+                except (discord.Forbidden, discord.HTTPException):
+                    with contextlib.suppress(Exception):
+                        await msg.delete()
                 return
             if punishments[warnings_number].punishment == "kick":
-                await member.kick(reason=f"You have received {warnings_number} warnings.")
-                await before(warnings_number, punishments[warnings_number], member)
+                msg = await before(warnings_number, punishments[warnings_number], member)
+                try:
+                    await member.kick(reason=f"You have received {warnings_number} warnings.")
+                except (discord.Forbidden, discord.HTTPException):
+                    with contextlib.suppress(Exception):
+                        await msg.delete()
                 return
             if punishments[warnings_number].punishment == "mute":
                 add_role = inter.guild.get_role(add_role)
