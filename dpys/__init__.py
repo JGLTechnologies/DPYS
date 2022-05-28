@@ -32,12 +32,12 @@ import datetime
 import aiosqlite
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
-from dpys import utils
+from .utils import GuildData
 
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.4.8"
+version = "5.4.9"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -255,7 +255,7 @@ class curse:
         words = word.replace(" ", "")
         words = words.split(",")
         words = set(words)
-        curses = await utils.GuildData.curse_set(inter.guild.id, db)
+        curses = await GuildData.curse_set(inter.guild.id, db)
         for x in words:
             if x in curses:
                 msg = f"{x} is already in the list."
