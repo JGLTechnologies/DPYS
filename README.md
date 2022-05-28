@@ -478,9 +478,10 @@ async def unwarn(inter: disnake.ApplicationCommandInteraction, member: disnake.M
 Punish:
 
 ```python
-async def punish(inter: disnake.ApplicationCommandInteraction, member: disnake.Member,
-                 punishments: typing.Mapping[int, Punishment],
-                 add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None) -> None
+async def punish(inter: ApplicationCommandInteraction, member: discord.Member,
+                     punishments: typing.Mapping[int, Punishment],
+                     add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None,
+                     before: Optional[Callable[[int, Punishment, discord.Member], Awaitable[None]]] = None) -> None:
 ```
 
 ```python

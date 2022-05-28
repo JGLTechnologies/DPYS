@@ -37,7 +37,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.4.0"
+version = "5.4.1"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -554,7 +554,8 @@ class warnings:
     @staticmethod
     async def punish(inter: ApplicationCommandInteraction, member: discord.Member,
                      punishments: typing.Mapping[int, Punishment],
-                     add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None) -> None:
+                     add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None,
+                     before: Optional[Callable[[int, Punishment, discord.Member], Awaitable[None]]] = None) -> None:
         memberid = str(member.id)
         guild = str(inter.guild.id)
         db = warnings_db
@@ -587,6 +588,7 @@ class warnings:
                 await db.execute("INSERT INTO tempban (guild,member,time) VALUES (?,?,?)",
                                  (guild, memberid, time))
                 await db.commit()
+                await before(warnings_number, punishments[warnings_number], member)
                 return
             else:
                 add_role = inter.guild.get_role(add_role)
@@ -604,16 +606,18 @@ class warnings:
                             await member.remove_roles(remove_role)
                     await mute_on_join.mute_add(inter.guild, member)
                     time = datetime.datetime.now() + datetime.timedelta(seconds=time)
-                    with contextlib.suppress(sqlite3.Error):
-                        await db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)",
-                                         (guild, memberid, time))
-                        await db.commit()
+                    await db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)",
+                                     (guild, memberid, time))
+                    await db.commit()
+                    await before(warnings_number, punishments[warnings_number], member)
         else:
             if punishments[warnings_number].punishment == "ban":
                 await member.ban(reason=f"You have received {warnings_number} warnings.")
+                await before(warnings_number, punishments[warnings_number], member)
                 return
             if punishments[warnings_number].punishment == "kick":
                 await member.kick(reason=f"You have received {warnings_number} warnings.")
+                await before(warnings_number, punishments[warnings_number], member)
                 return
             if punishments[warnings_number].punishment == "mute":
                 add_role = inter.guild.get_role(add_role)
@@ -625,6 +629,7 @@ class warnings:
                 if add_role is not None:
                     await member.add_roles(add_role)
                 await mute_on_join.mute_add(inter.guild, member)
+                await before(warnings_number, punishments[warnings_number], member)
 
     @staticmethod
     async def temp_mute_loop(bot: commands.Bot, add_role_func: Callable[[int], Awaitable[Optional[int]]],
