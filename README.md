@@ -200,7 +200,7 @@ Softban:
 
 ```python
 async def softban(inter: disnake.ApplicationCommandInteraction, member: disnake.Member,
-              reason: typing.Optional[str] = None, msg: str = None) -> None
+                  reason: typing.Optional[str] = None, msg: str = None) -> None
 ```
 
 ```python
@@ -268,6 +268,22 @@ async def clear(inter: disnake.ApplicationCommandInteraction, amount: typing.Opt
 @bot.slash_command(name="clear")
 async def clear(inter, amount: int = commands.Param(default=99999999999999999)):
     await dpys.admin.clear(inter, amount)
+```
+
+<br>
+
+Timeout:
+
+```python
+async def timeout(inter: ApplicationCommandInteraction, member: discord.Member,
+                  duration: Union[float, datetime.timedelta] = None, until: datetime.datetime = None,
+                  reason: typing.Optional[str] = None, msg: str = None) -> None:
+```
+
+```python
+@bot.slash_command(name="timeout")
+async def timeout(inter, seconds: int = commands.Param(), reason: str = commands.Param(None)):
+    await dpys.admin.timeout(inter, duration=seconds, reason=reason)
 ```
 
 <br>
@@ -479,9 +495,10 @@ Punish:
 
 ```python
 async def punish(inter: ApplicationCommandInteraction, member: discord.Member,
-                     punishments: typing.Mapping[int, Punishment],
-                     add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None,
-                     before: Optional[Callable[[int, Punishment, discord.Member], Awaitable[Optional[Member]]]] = None) -> None:
+                 punishments: typing.Mapping[int, Punishment],
+                 add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None,
+                 before: Optional[
+                     Callable[[int, Punishment, discord.Member], Awaitable[Optional[Member]]]] = None) -> None:
 ```
 
 ```python
