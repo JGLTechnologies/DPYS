@@ -4,7 +4,7 @@
 
 # DPYS
 
-##  The goal of DPYS is to make basic functionalities that every good bot needs easy to implement for beginners.
+## The goal of DPYS is to make basic functionalities that every good bot needs easy to implement for beginners.
 
 A big update was just released that added disnake support. If there are any bugs please report
 them <a href="https://jgltechnologies.com/contact">here</a>.
@@ -60,6 +60,7 @@ import disnake
 
 bot = commands.AutoShardedBot(command_prefix="!")
 TOKEN = "Your Token"
+
 
 # Do not type hint disnake.Role for the role argument
 # Command to create the reaction role
@@ -156,18 +157,21 @@ bot.run(TOKEN)
 
 # Documentation
 
-You will here 'mute remove role' mentioned a lot. This is just an optional role that gets removed when a member is muted, and added back when they are unmuted.
+You will here 'mute remove role' mentioned a lot. This is just an optional role that gets removed when a member is
+muted, and added back when they are unmuted.
 
 ## Admin class
 
 Kick:
 
 ```python
-async def kick(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, reason: typing.Optional[str] = None) -> None
+async def kick(inter: disnake.ApplicationCommandInteraction, member: disnake.Member,
+               reason: typing.Optional[str] = None, msg: str = None) -> None
 ```
 
 ```python
 import dpys
+
 
 @bot.slash_command(name="kick")
 @commands.has_permissions(kick_members=True)
@@ -180,7 +184,8 @@ async def kick(inter, member: disnake.Member = commands.Param(), reason: str = c
 Ban:
 
 ```python
-async def ban(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, reason: typing.Optional[str] = None) -> None
+async def ban(inter: disnake.ApplicationCommandInteraction, member: disnake.Member,
+              reason: typing.Optional[str] = None, msg: str = None) -> None
 ```
 
 ```python
@@ -195,7 +200,8 @@ async def ban(inter, member: disnake.Member = commands.Param(), reason: str = co
 Mute:
 
 ```python
-async def mute(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, role_add: int, role_remove: typing.Optional[int] = None, reason: str = None) -> None
+async def mute(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, role_add: int,
+               role_remove: typing.Optional[int] = None, reason: str = None, msg: str = None) -> None
 ```
 
 ```python
@@ -209,7 +215,8 @@ async def mute(inter, member: disnake.Member = commands.Param(), reason: str = c
 Unmute:
 
 ```python
-async def unmute(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, role_remove: int, role_add: typing.Optional[int] = None) -> None
+async def unmute(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, role_remove: int,
+                 role_add: typing.Optional[int] = None, msg: str = None) -> None
 ```
 
 ```python
@@ -223,7 +230,8 @@ async def unmute(inter, member: disnake.Member = commands.Param()):
 Clear:
 
 ```python
-async def clear(inter: disnake.ApplicationCommandInteraction, amount: typing.Optional[int] = 99999999999999999) -> int
+async def clear(inter: disnake.ApplicationCommandInteraction, amount: typing.Optional[int] = 99999999999999999,
+                msg: str = None) -> int
 ```
 
 ```python
@@ -245,8 +253,8 @@ async def mute_add(guild: disnake.Guild, member: disnake.Member) -> None
 ```python
 @bot.slash_command(name="mute")
 async def mute(inter, member: dicord.Member = commands.Param(), reason: str = commands.Param(default=None)):
-	await dpys.admin.mute(inter, member, MUTE_ROLE_ID, MUTE_REMOVE_ROLE_ID, reason)
-	await dpys.mute_on_join.mute_add(inter.guild, member)
+    await dpys.admin.mute(inter, member, MUTE_ROLE_ID, MUTE_REMOVE_ROLE_ID, reason)
+    await dpys.mute_on_join.mute_add(inter.guild, member)
 ```
 
 <br>
@@ -260,8 +268,8 @@ async def mute_remove(guild: disnake.Guild, member: disnake.Member) -> None
 ```python
 @bot.slash_command(name="unmute")
 async def unmute(inter, member: dicord.Member = commands.Param()):
-	await dpys.admin.unmute(inter, member, MUTE_ROLE_ID, MUTE_REMOVE_ROLE_ID)
-	await dpys.mute_on_join.mute_remove(inter.guild, member)
+    await dpys.admin.unmute(inter, member, MUTE_ROLE_ID, MUTE_REMOVE_ROLE_ID)
+    await dpys.mute_on_join.mute_remove(inter.guild, member)
 ```
 
 <br>
@@ -275,7 +283,7 @@ async def mute_on_join(member: disnake.Member, role: int) -> None
 ```python
 @bot.listen("on_member_join")
 async def mute_on_join(member: disnake.Member):
-	await dpys.mute_on_join.mute_on_join(member, MUTE_ROLE_ID)
+    await dpys.mute_on_join.mute_on_join(member, MUTE_ROLE_ID)
 ```
 
 <br>
@@ -288,9 +296,11 @@ async def manual_unmute_check(after: disnake.Member, roleid: int) -> None
 
 ```python
 import dpys
+
+
 @bot.listen("on_member_update")
 async def manual_unmute_check(before: disnake.Member, after: disnake.Member):
-	await dpys.mute_on_join.manual_unmute_check(after, MUTE_ROLE_ID)
+    await dpys.mute_on_join.manual_unmute_check(after, MUTE_ROLE_ID)
 ```
 
 <br>
@@ -300,13 +310,15 @@ async def manual_unmute_check(before: disnake.Member, after: disnake.Member):
 Command:
 
 ```python
-async def command(inter: disnake.ApplicationCommandInteraction, emoji: str, role: str, title: str, description: str) -> None
+async def command(inter: disnake.ApplicationCommandInteraction, emoji: str, role: str, title: str,
+                  description: str) -> None
 ```
 
 ```python
 # Don't type hint disnake.Role for the role parameter
 @bot.slash_command(name="rr")
-async def reactionrole(inter, emoji: str = commands.Param(), role: str = commands.Param(), title: str = commands.Param(), description: str = commands.Param()):
+async def reactionrole(inter, emoji: str = commands.Param(), role: str = commands.Param(),
+                       title: str = commands.Param(), description: str = commands.Param()):
     await dpys.rr.command(inter, emoji, role, title, description)
 ```
 
@@ -359,12 +371,13 @@ Clear Reaction Role command:
 ```python
 async def clear_all(inter: disnake.ApplicationCommandInteraction) -> None
 
+
 async def clear_one(inter: disnake.ApplicationCommandInteraction, message_id: int) -> None
 ```
 
 ```python
 @bot.slash_command(name="rrclear")
-async def rrclear(inter, id : str = commands.Param()):
+async def rrclear(inter, id: str = commands.Param()):
     if id.lower() == "all":
         await dpys.rr.clear_all(inter)
     else:
@@ -403,7 +416,8 @@ async def rr_clear_on_thread_delete(thread: disnake.Thread):
 Warn:
 
 ```python
-async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, reason: typing.Optional[str] = None) -> None
+async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member,
+               reason: typing.Optional[str] = None) -> None
 ```
 
 ```python
@@ -424,8 +438,9 @@ async def unwarn(inter: disnake.ApplicationCommandInteraction, member, dir, numb
 ```python
 # Pass in "all" as the number parameter to clear all warnings from a member
 @bot.slash_command(name="unwarn")
-async def unwarn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param(), number: str = commands.Param(default="all")):
-	await dpys.warnings.unwarn(inter, member, number)
+async def unwarn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param(),
+                 number: str = commands.Param(default="all")):
+    await dpys.warnings.unwarn(inter, member, number)
 ```
 
 <br>
@@ -434,8 +449,8 @@ Punish:
 
 ```python
 async def punish(inter: disnake.ApplicationCommandInteraction, member: disnake.Member,
-                     punishments: typing.Mapping[int, Punishment],
-                     add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None) -> None
+                 punishments: typing.Mapping[int, Punishment],
+                 add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None) -> None
 ```
 
 ```python
@@ -463,16 +478,17 @@ import dpys
 GET_MUTE_ROLE_ID = "an async function that takes in a guild id and returns the id for your mute role"
 GET_MUTE_REMOVE_ROLE_ID = "an async function that takes in a guild id and returns the id for your mute remove role"
 
+
 class DpysLoops(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.dpys_tempmute_loop.start()
         self.dpys_tempban_loop.start()
-    
+
     @tasks.loop(seconds=1)
     async def dpys_tempmute_loop(self):
         await dpys.warnings.temp_mute_loop(self.bot, GET_MUTE_ROLE_ID, GET_MUTE_REMOVE_ROLE_ID)
-    
+
     @dpys_tempmute_loop.before_loop
     async def before_dpys_tempmute_loop(self):
         await self.bot.wait_until_ready()
@@ -484,7 +500,8 @@ class DpysLoops(commands.Cog):
     @dpys_tempban_loop.before_loop
     async def before_dpys_tempban_loop(self):
         await self.bot.wait_until_ready()
-            
+
+
 def setup(bot):
     bot.add_cog(DpysLoops(bot))
 ```
@@ -499,8 +516,8 @@ async def warnings_list(inter: disnake.ApplicationCommandInteraction, member: di
 
 ```python
 @bot.slash_command(name="warnings")
-    async def warnings(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param()):
-        await dpys.warnings.warnings_list(inter, member)
+async def warnings(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param()):
+    await dpys.warnings.warnings_list(inter, member)
 ```
 
 <br>
@@ -571,7 +588,7 @@ Clear DPYS Data On Guild Remove:
 ```python
 @bot.listen("on_guild_remove")
 async def clear_dpys_data(guild: disnake.Guild):
-	await dpys.misc.clear_data_on_guild_remove(guild)
+    await dpys.misc.clear_data_on_guild_remove(guild)
 ```
 
 

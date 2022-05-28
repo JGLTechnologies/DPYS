@@ -37,7 +37,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.3.7"
+version = "5.3.8"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -100,7 +100,7 @@ class admin:
 
     @staticmethod
     async def mute(inter: ApplicationCommandInteraction, member: discord.Member, role_add: int,
-                   role_remove: typing.Optional[int] = None, reason: str = None) -> None:
+                   role_remove: typing.Optional[int] = None, reason: str = None, msg: str = None) -> None:
         if inter.guild.get_role(role_add) in member.roles:
             await inter.response.send_message(f"{member.name}#{member.discriminator} is already muted.",
                                               ephemeral=EPHEMERAL)
@@ -115,14 +115,15 @@ class admin:
                 with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                     await member.remove_roles(inter.guild.get_role(role_remove))
             if reason is None:
-                await inter.response.send_message(f"Muted {str(member)}.", ephemeral=EPHEMERAL)
+                await inter.response.send_message(msg or f"Muted {str(member)}.", ephemeral=EPHEMERAL)
             else:
-                await inter.response.send_message(f"Muted {member.name}#{member.discriminator}. Reason: {reason}",
-                                                  ephemeral=EPHEMERAL)
+                await inter.response.send_message(
+                    msg or f"Muted {member.name}#{member.discriminator}. Reason: {reason}",
+                    ephemeral=EPHEMERAL)
 
     @staticmethod
     async def unmute(inter: ApplicationCommandInteraction, member: discord.Member, role_remove: int,
-                     role_add: typing.Optional[int] = None) -> None:
+                     role_add: typing.Optional[int] = None, msg: str = None) -> None:
         if inter.guild.get_role(role_remove) not in member.roles:
             await inter.response.send_message(f"{member.name}#{member.discriminator} is not muted.",
                                               ephemeral=EPHEMERAL)
@@ -134,59 +135,61 @@ class admin:
             if role_add is not None:
                 with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                     await member.add_roles(inter.guild.get_role(role_add))
-            await inter.response.send_message(f"Unmuted {member.name}#{member.discriminator}.", ephemeral=EPHEMERAL)
+            await inter.response.send_message(msg or f"Unmuted {member.name}#{member.discriminator}.",
+                                              ephemeral=EPHEMERAL)
 
     @staticmethod
-    async def clear(inter: ApplicationCommandInteraction, amount: typing.Optional[int] = 99999999999999999) -> int:
+    async def clear(inter: ApplicationCommandInteraction, amount: typing.Optional[int] = 99999999999999999,
+                    msg: str = None) -> int:
         limit = datetime.datetime.now() - datetime.timedelta(weeks=2)
         purged = await inter.channel.purge(limit=amount, after=limit)
         purged = len(purged)
         if purged != 1:
-            message = f"Cleared {purged} messages."
+            message = msg or f"Cleared {purged} messages."
         else:
-            message = f"Cleared {purged} message."
+            message = msg or f"Cleared {purged} message."
         await inter.response.send_message(message, ephemeral=EPHEMERAL)
         return purged
 
     @staticmethod
     async def kick(inter: ApplicationCommandInteraction, member: discord.Member,
-                   reason: typing.Optional[str] = None) -> None:
+                   reason: typing.Optional[str] = None, msg: str = None) -> None:
         if len(str(reason)) > 256:
             reason = reason[:256]
         await member.kick(reason=reason)
         if reason is None:
-            message = f"Kicked {member.name}#{member.discriminator}."
+            message = msg or f"Kicked {member.name}#{member.discriminator}."
         else:
-            message = f"Kicked {member.name}#{member.discriminator}. Reason: {reason}"
+            message = msg or f"Kicked {member.name}#{member.discriminator}. Reason: {reason}"
         await inter.response.send_message(message, ephemeral=EPHEMERAL)
 
     @staticmethod
     async def ban(inter: ApplicationCommandInteraction, member: discord.Member,
-                  reason: typing.Optional[str] = None) -> None:
+                  reason: typing.Optional[str] = None, msg: str = None) -> None:
         if len(str(reason)) > 256:
             reason = reason[:256]
         await member.ban(reason=reason)
         if reason is None:
-            message = f"Banned {member.name}#{member.discriminator}."
+            message = msg or f"Banned {member.name}#{member.discriminator}."
         else:
-            message = f"Banned {member.name}#{member.discriminator}. Reason: {reason}"
+            message = msg or f"Banned {member.name}#{member.discriminator}. Reason: {reason}"
         await inter.response.send_message(message, ephemeral=EPHEMERAL)
 
     @staticmethod
     async def softban(inter: ApplicationCommandInteraction, member: discord.Member,
-                      reason: typing.Optional[str] = None) -> None:
+                      reason: typing.Optional[str] = None, msg: str = None) -> None:
         if len(str(reason)) > 256:
             reason = reason[:256]
         await member.ban(reason=reason)
         if reason is None:
-            message = f"Soft banned {member.name}#{member.discriminator}."
+            message = msg or f"Soft banned {member.name}#{member.discriminator}."
         else:
-            message = f"Soft banned {member.name}#{member.discriminator}. Reason: {reason}"
+            message = msg or f"Soft banned {member.name}#{member.discriminator}. Reason: {reason}"
         await inter.response.send_message(message, ephemeral=EPHEMERAL)
         await member.unban()
 
     @staticmethod
-    async def unban(inter: ApplicationCommandInteraction, member: typing.Union[str, int]) -> None:
+    async def unban(inter: ApplicationCommandInteraction, member: typing.Union[str, int], msg: str = None) -> None:
         bans = await inter.guild.bans()
         if isinstance(member, int):
             ban = [ban for ban in bans if ban.user.id == member]
@@ -201,7 +204,7 @@ class admin:
             await inter.response.send_message(f"{member} is not banned.", ephemeral=EPHEMERAL)
             return
         await inter.guild.unban(ban[0].user)
-        await inter.response.send_message(f"Unbanned {member}.", ephemeral=EPHEMERAL)
+        await inter.response.send_message(msg or f"Unbanned {member}.", ephemeral=EPHEMERAL)
 
 
 class curse:
