@@ -37,7 +37,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.4.5"
+version = "5.4.6"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -630,11 +630,10 @@ class warnings:
                     return
                 else:
                     time = punishments[warnings_number].duration
-                    with contextlib.suppress(discord.Forbidden, discord.HTTPException):
+                    if add_role is not None:
                         await member.add_roles(add_role)
                     if remove_role is not None:
-                        with contextlib.suppress(discord.Forbidden, discord.HTTPException):
-                            await member.remove_roles(remove_role)
+                        await member.remove_roles(remove_role)
                     await mute_on_join.mute_add(inter.guild, member)
                     time = datetime.datetime.now() + datetime.timedelta(seconds=time)
                     await db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)",
@@ -703,11 +702,10 @@ class warnings:
                     else:
                         role_remove = await remove_role_func(int(guild_id))
                     if datetime.datetime.now() >= time:
-                        with contextlib.suppress(discord.Forbidden, discord.HTTPException):
+                        with contextlib.suppress(Exception):
                             await member.add_roles(guild.get_role(int(role_remove)))
-                        if role_add is not None:
-                            with contextlib.suppress(discord.Forbidden, discord.HTTPException):
-                                await member.remove_roles(guild.get_role(int(role_add)))
+                        with contextlib.suppress(Exception):
+                            await member.remove_roles(guild.get_role(int(role_add)))
                         with contextlib.suppress(sqlite3.Error):
                             await db.execute("DELETE FROM tempmute WHERE guild = ? and member = ? and time = ?",
                                              (str(guild.id), str(member.id), time_str))
