@@ -27,8 +27,6 @@ import os
 import sqlite3
 from typing import *
 import typing
-
-import discord
 import disnake as discord
 import datetime
 import aiosqlite
@@ -39,7 +37,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.4.2"
+version = "5.4.3"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
