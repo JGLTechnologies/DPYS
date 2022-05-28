@@ -490,7 +490,7 @@ async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Mem
                reason: str = commands.Param(default=None)):
     await dpys.warnings.warn(inter, member, reason)
     # This will do nothing for the first 2 warnings, but on the third warning it will kick the member.
-    # Valid punishments for dpys.warnings.Punishment are kick, ban, mute, temp_ban, temp_mute
+    # Valid punishments for dpys.warnings.Punishment are kick, ban, mute, temp_ban, temp_mute, timeout
     # If you want to mute you have to pass in you mute role id and an optional mute remove role id.
     # For temporary punishments, a duration parameter can be passed into the dpys.warnings.Punishment constructor.
     # This is the number of seconds that the punishment will last.
@@ -500,7 +500,7 @@ async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Mem
 
 <br>
 
-If you want to use temporary punishments, then include this cog in your bot.
+If you want to use temp_ban or temp_mute, then include this cog in your bot.
 
 ```python
 from disnake.ext import commands, tasks

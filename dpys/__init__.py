@@ -37,7 +37,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.4.4"
+version = "5.4.5"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -439,9 +439,9 @@ class mute_on_join:
 class warnings:
     class Punishment:
         def __init__(self, punishment: str, duration: typing.Optional[int] = None):
-            if punishment.startswith("temp") and duration is None:
+            if (punishment.startswith("temp") or punishment == "timeout") and duration is None:
                 raise Exception("duration cannot be None for temporary punishments.")
-            if punishment not in ["temp_ban", "temp_mute", "mute", "ban", "kick"]:
+            if punishment not in ["temp_ban", "temp_mute", "mute", "ban", "kick", "timeout"]:
                 raise Exception("Invalid punishment.")
             self.punishment = punishment
             if not punishment.startswith("temp"):
@@ -611,17 +611,17 @@ class warnings:
                 msg = await before(warnings_number, punishments[warnings_number], member)
                 time = punishments[warnings_number].duration
                 try:
-                    await member.ban(reason=f"You have received {warnings_number} warnings.")
-                except (discord.Forbidden, discord.HTTPException):
+                    await member.ban(reason=f"You have received {warnings_number} warning(s).")
+                except (discord.Forbidden, discord.HTTPException) as e:
                     with contextlib.suppress(Exception):
                         await msg.delete()
+                    raise e
                 time = datetime.datetime.now() + datetime.timedelta(seconds=time)
                 await db.execute("INSERT INTO tempban (guild,member,time) VALUES (?,?,?)",
                                  (guild, memberid, time))
                 await db.commit()
-
                 return
-            else:
+            elif punishments[warnings_number].punishment == "temp_mute":
                 add_role = inter.guild.get_role(add_role)
                 if not isinstance(add_role, discord.Role):
                     return
@@ -641,22 +641,29 @@ class warnings:
                                      (guild, memberid, time))
                     await db.commit()
                     await before(warnings_number, punishments[warnings_number], member)
+            else:
+                time = punishments[warnings_number].duration
+                await member.timeout(reason=f"You have received {warnings_number} warning(s).", duration=time)
+                await before(warnings_number, punishments[warnings_number], member)
+                return
         else:
             if punishments[warnings_number].punishment == "ban":
                 msg = await before(warnings_number, punishments[warnings_number], member)
                 try:
-                    await member.ban(reason=f"You have received {warnings_number} warnings.")
-                except (discord.Forbidden, discord.HTTPException):
+                    await member.ban(reason=f"You have received {warnings_number} warning(s).")
+                except (discord.Forbidden, discord.HTTPException) as e:
                     with contextlib.suppress(Exception):
                         await msg.delete()
+                    raise e
                 return
             if punishments[warnings_number].punishment == "kick":
                 msg = await before(warnings_number, punishments[warnings_number], member)
                 try:
-                    await member.kick(reason=f"You have received {warnings_number} warnings.")
-                except (discord.Forbidden, discord.HTTPException):
+                    await member.kick(reason=f"You have received {warnings_number} warning(s).")
+                except (discord.Forbidden, discord.HTTPException) as e:
                     with contextlib.suppress(Exception):
                         await msg.delete()
+                    raise e
                 return
             if punishments[warnings_number].punishment == "mute":
                 add_role = inter.guild.get_role(add_role)
