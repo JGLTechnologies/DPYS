@@ -37,7 +37,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.4.7"
+version = "5.4.8"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -221,15 +221,15 @@ class admin:
 
     @staticmethod
     async def unban(inter: ApplicationCommandInteraction, member: typing.Union[str, int], msg: str = None) -> bool:
-        bans = await inter.guild.bans()
+        bans = inter.guild.bans()
         if isinstance(member, int):
-            ban = [ban for ban in bans if ban.user.id == member]
+            ban = [ban async for ban in bans if ban.user.id == member]
         else:
             try:
                 name, discrim = member.split("#")
             except ValueError:
                 raise commands.errors.UserNotFound(member)
-            ban = [ban for ban in bans if ban.user.discriminator ==
+            ban = [ban async for ban in bans if ban.user.discriminator ==
                    discrim and ban.user.name == name]
         if not ban:
             await inter.response.send_message(f"{member} is not banned.", ephemeral=EPHEMERAL)
