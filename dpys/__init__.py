@@ -37,7 +37,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.4.6"
+version = "5.4.7"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -261,6 +261,7 @@ class curse:
                 msg = f"{x} is already in the list."
                 await inter.response.send_message(msg, ephemeral=EPHEMERAL)
                 return
+        for x in words:
             await db.execute("INSERT INTO curses (curse,guild) VALUES (?,?)", (x, guildid))
         await db.commit()
         await inter.response.send_message("The word(s) have been added to the list.", ephemeral=EPHEMERAL)
@@ -394,8 +395,9 @@ class mute_on_join:
         PRIMARY KEY (name,guild)
         )""")
         await db.commit()
-        await db.execute("INSERT INTO muted (name,guild) VALUES (?,?)", (member, guildid))
-        await db.commit()
+        with contextlib.suppress(sqlite3.Error):
+            await db.execute("INSERT INTO muted (name,guild) VALUES (?,?)", (member, guildid))
+            await db.commit()
 
     @staticmethod
     async def mute_remove(guild: discord.Guild, member: discord.Member) -> None:
