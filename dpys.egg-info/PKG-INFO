@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: dpys
-Version: 5.3.8
+Version: 5.3.9
 Summary: A library to simplify discord.py
 Home-page: https://jgltechnologies.com/dpys
 Author: George Luca
@@ -55,7 +55,6 @@ Setup
 ```python
 import dpys
 from disnake.ext import commands
-import disnake
 
 bot = commands.AutoShardedBot(command_prefix="!")
 TOKEN = "Your Token

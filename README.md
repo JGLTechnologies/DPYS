@@ -38,7 +38,6 @@ Setup
 ```python
 import dpys
 from disnake.ext import commands
-import disnake
 
 bot = commands.AutoShardedBot(command_prefix="!")
 TOKEN = "Your Token
