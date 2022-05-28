@@ -1,7 +1,9 @@
 import asyncio
+import sqlite3
 import aiosqlite
 import os
 import aiohttp
+import time
 from pathlib import Path
 from disnake.ext import commands
 import disnake
@@ -9,22 +11,25 @@ import disnake
 DPYS_DBS = ["warnings.db", "curse.db", "rr.db", "muted.db"]
 
 
+def get_discord_date(ts: float = None):
+    return f"<t:{int(ts or time.time())}> (<t:{int(ts or time.time())}:R>)"
+
+
 class GuildData:
     @staticmethod
-    async def curse_set(guild_id: int) -> set:
+    async def curse_set(guild_id: int, db: aiosqlite.Connection) -> set:
         await asyncio.get_event_loop().run_in_executor(None, os.chdir, dir)
         curse_set = set()
-        async with aiosqlite.connect("curse.db") as db:
-            try:
-                async with db.execute(
-                        "SELECT curse FROM curses WHERE guild = ?", (str(
-                            guild_id),)
-                ) as cursor:
-                    async for entry in cursor:
-                        curse_set.add(entry[0])
-                return curse_set
-            except Exception:
-                return set({})
+        try:
+            async with db.execute(
+                    "SELECT curse FROM curses WHERE guild = ?", (str(
+                        guild_id),)
+            ) as cursor:
+                async for entry in cursor:
+                    curse_set.add(entry[0])
+            return curse_set
+        except sqlite3.Error:
+            return set()
 
     @staticmethod
     async def bot_percentage(guild: disnake.Guild) -> float:
@@ -69,6 +74,7 @@ class BotData:
 
 
 class DiscordUtils:
+    @staticmethod
     async def nitro_code_is_valid(code: str) -> bool:
         async with aiohttp.ClientSession() as session:
             async with session.get(
@@ -76,7 +82,7 @@ class DiscordUtils:
             ) as r:
                 data = await r.json()
         try:
-            name = data["store_listing"]["sku"]["name"]
+            data["store_listing"]["sku"]["name"]
         except KeyError:
             return False
         if data["uses"] >= data["max_uses"]:

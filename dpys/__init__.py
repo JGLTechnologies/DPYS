@@ -37,7 +37,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.4.3"
+version = "5.4.4"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -112,19 +112,18 @@ class admin:
             return
         if len(str(reason)) > 256:
             reason = reason[:256]
+        if not isinstance(inter.guild.get_role(role_add), discord.Role):
+            return
+        await member.add_roles(inter.guild.get_role(role_add))
+        if role_remove is not None:
+            with contextlib.suppress(discord.Forbidden, discord.HTTPException):
+                await member.remove_roles(inter.guild.get_role(role_remove))
+        if reason is None:
+            await inter.response.send_message(msg or f"Muted {str(member)}.", ephemeral=EPHEMERAL)
         else:
-            if not isinstance(inter.guild.get_role(role_add), discord.Role):
-                return
-            await member.add_roles(inter.guild.get_role(role_add))
-            if role_remove is not None:
-                with contextlib.suppress(discord.Forbidden, discord.HTTPException):
-                    await member.remove_roles(inter.guild.get_role(role_remove))
-            if reason is None:
-                await inter.response.send_message(msg or f"Muted {str(member)}.", ephemeral=EPHEMERAL)
-            else:
-                await inter.response.send_message(
-                    msg or f"Muted {member.name}#{member.discriminator}. Reason: {reason}",
-                    ephemeral=EPHEMERAL)
+            await inter.response.send_message(
+                msg or f"Muted {member.name}#{member.discriminator}. Reason: {reason}",
+                ephemeral=EPHEMERAL)
 
     @staticmethod
     async def unmute(inter: ApplicationCommandInteraction, member: discord.Member, role_remove: int,
@@ -182,6 +181,32 @@ class admin:
         await inter.response.send_message(message, ephemeral=EPHEMERAL)
 
     @staticmethod
+    async def timeout(inter: ApplicationCommandInteraction, member: discord.Member,
+                      duration: Union[float, datetime.timedelta] = None, until: datetime.datetime = None,
+                      reason: typing.Optional[str] = None, msg: str = None) -> None:
+        if len(str(reason)) > 256:
+            reason = reason[:256]
+        if duration is not None:
+            await member.timeout(duration=duration, reason=reason)
+            if isinstance(duration, datetime.timedelta):
+                end_timeout = utils.get_discord_date((datetime.datetime.now() + duration).timestamp())
+            else:
+                end_timeout = utils.get_discord_date(
+                    (datetime.datetime.now() + datetime.timedelta(seconds=duration)).timestamp())
+        elif until is not None:
+            await member.timeout(until=until, reason=reason)
+            end_timeout = utils.get_discord_date(until.timestamp())
+        else:
+            await member.timeout(reason=reason)
+            await inter.response.send_message(f"Removed timeout from {str(member)}.", ephemeral=EPHEMERAL)
+            return
+        if reason is None:
+            message = msg or f"Timed out {str(member)} until {end_timeout}."
+        else:
+            message = msg or f"Timed out {str(member)} until {end_timeout}. Reason: {reason}"
+        await inter.response.send_message(message, ephemeral=EPHEMERAL)
+
+    @staticmethod
     async def softban(inter: ApplicationCommandInteraction, member: discord.Member,
                       reason: typing.Optional[str] = None, msg: str = None) -> None:
         if len(str(reason)) > 256:
@@ -230,7 +255,7 @@ class curse:
         words = word.replace(" ", "")
         words = words.split(",")
         words = set(words)
-        curses = await utils.GuildData.curse_set(inter.guild.id)
+        curses = await utils.GuildData.curse_set(inter.guild.id, db)
         for x in words:
             if x in curses:
                 msg = f"{x} is already in the list."
@@ -555,7 +580,8 @@ class warnings:
     async def punish(inter: ApplicationCommandInteraction, member: discord.Member,
                      punishments: typing.Mapping[int, Punishment],
                      add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None,
-                     before: Optional[Callable[[int, Punishment, discord.Member], Awaitable[Optional[discord.Message]]]] = None) -> None:
+                     before: Optional[Callable[
+                         [int, Punishment, discord.Member], Awaitable[Optional[discord.Message]]]] = None) -> None:
         memberid = str(member.id)
         guild = str(inter.guild.id)
         db = warnings_db
