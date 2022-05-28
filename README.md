@@ -196,6 +196,37 @@ async def ban(inter, member: disnake.Member = commands.Param(), reason: str = co
 
 <br>
 
+Softban:
+
+```python
+async def softban(inter: disnake.ApplicationCommandInteraction, member: disnake.Member,
+              reason: typing.Optional[str] = None, msg: str = None) -> None
+```
+
+```python
+@bot.slash_command(name="softban")
+@commands.has_permissions(ban_members=True)
+async def softban(inter, member: disnake.Member = commands.Param(), reason: str = commands.Param(default=None)):
+    await dpys.admin.softban(inter, member, reason)
+```
+
+<br>
+
+Unban:
+
+```python
+async def unban(inter: ApplicationCommandInteraction, member: typing.Union[str, int], msg: str = None) -> bool:
+```
+
+```python
+@bot.slash_command(name="unban")
+@commands.has_permissions(ban_members=True)
+async def unban(inter, member: string = commands.Param()):
+    await dpys.admin.unban(inter, member)
+```
+
+<br>
+
 Mute:
 
 ```python
@@ -215,7 +246,7 @@ Unmute:
 
 ```python
 async def unmute(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, role_remove: int,
-                 role_add: typing.Optional[int] = None, msg: str = None) -> None
+                 role_add: typing.Optional[int] = None, msg: str = None) -> bool
 ```
 
 ```python
@@ -431,7 +462,7 @@ async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Mem
 Unwarn:
 
 ```python
-async def unwarn(inter: disnake.ApplicationCommandInteraction, member, dir, number: typing.Union[int, str]) -> None
+async def unwarn(inter: disnake.ApplicationCommandInteraction, member, dir, number: typing.Union[int, str]) -> bool
 ```
 
 ```python

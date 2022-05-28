@@ -37,7 +37,7 @@ from dpys import utils
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.3.9"
+version = "5.4.0"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -128,20 +128,21 @@ class admin:
 
     @staticmethod
     async def unmute(inter: ApplicationCommandInteraction, member: discord.Member, role_remove: int,
-                     role_add: typing.Optional[int] = None, msg: str = None) -> None:
+                     role_add: typing.Optional[int] = None, msg: str = None) -> bool:
         if inter.guild.get_role(role_remove) not in member.roles:
             await inter.response.send_message(f"{member.name}#{member.discriminator} is not muted.",
                                               ephemeral=EPHEMERAL)
-            return
+            return False
         else:
             if not isinstance(inter.guild.get_role(role_remove), discord.Role):
-                return
+                return False
             await member.remove_roles(inter.guild.get_role(role_remove))
             if role_add is not None:
                 with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                     await member.add_roles(inter.guild.get_role(role_add))
             await inter.response.send_message(msg or f"Unmuted {member.name}#{member.discriminator}.",
                                               ephemeral=EPHEMERAL)
+            return True
 
     @staticmethod
     async def clear(inter: ApplicationCommandInteraction, amount: typing.Optional[int] = 99999999999999999,
@@ -194,7 +195,7 @@ class admin:
         await member.unban()
 
     @staticmethod
-    async def unban(inter: ApplicationCommandInteraction, member: typing.Union[str, int], msg: str = None) -> None:
+    async def unban(inter: ApplicationCommandInteraction, member: typing.Union[str, int], msg: str = None) -> bool:
         bans = await inter.guild.bans()
         if isinstance(member, int):
             ban = [ban for ban in bans if ban.user.id == member]
@@ -207,9 +208,10 @@ class admin:
                    discrim and ban.user.name == name]
         if not ban:
             await inter.response.send_message(f"{member} is not banned.", ephemeral=EPHEMERAL)
-            return
+            return False
         await inter.guild.unban(ban[0].user)
         await inter.response.send_message(msg or f"Unbanned {member}.", ephemeral=EPHEMERAL)
+        return True
 
 
 class curse:
@@ -477,7 +479,7 @@ class warnings:
             await inter.response.send_message(f"{user.name}#{user.discriminator} has no warnings.", ephemeral=EPHEMERAL)
 
     @staticmethod
-    async def unwarn(inter: ApplicationCommandInteraction, member, number: typing.Union[int, str]) -> None:
+    async def unwarn(inter: ApplicationCommandInteraction, member, number: typing.Union[int, str]) -> bool:
         user = member
         guild = str(inter.guild.id)
         member = str(member.id)
@@ -488,22 +490,22 @@ class warnings:
             async with db.execute("SELECT reason FROM warnings WHERE guild = ? and member_id = ?",
                                   (guild, member)) as cursor:
                 count = 0
-                async for entry in cursor:
+                async for _ in cursor:
                     count += 1
         except:
             msg = f"{user.name}#{user.discriminator} has no warnings."
             await inter.response.send_message(msg, ephemeral=EPHEMERAL)
-            return
+            return False
         if count < 1:
             msg = f"{user.name}#{user.discriminator} has no warnings."
             await inter.response.send_message(msg, ephemeral=EPHEMERAL)
-            return
+            return False
         if number == "all":
             await db.execute("DELETE FROM warnings WHERE guild = ? and member_id = ?", (guild, member))
             await db.commit()
             msg = f"Cleared all warnings from {user.name}#{user.discriminator}."
             await inter.response.send_message(msg, ephemeral=EPHEMERAL)
-            return
+            return True
         else:
             try:
                 if "," in number:
@@ -540,12 +542,14 @@ class warnings:
                     await db.commit()
                     msg = f"Cleared {user.name}#{user.discriminator}'s #{number} warning."
                     await inter.response.send_message(msg, ephemeral=EPHEMERAL)
+                    return True
             except:
                 if number == "all":
                     msg = f"{user.name}#{user.discriminator} has no warnings."
                 else:
                     msg = f"{user.name}#{user.discriminator} does not have that many warnings."
                 await inter.response.send_message(msg, ephemeral=EPHEMERAL)
+                return False
 
     @staticmethod
     async def punish(inter: ApplicationCommandInteraction, member: discord.Member,
