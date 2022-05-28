@@ -37,7 +37,7 @@ from .utils import GuildData
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.5.1"
+version = "5.5.3"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -79,25 +79,31 @@ class misc:
     @staticmethod
     async def clear_data_on_guild_remove(guild: discord.Guild) -> None:
         with contextlib.suppress(sqlite3.Error):
-            await warnings_db.execute("DELETE FROM tempmute WHERE guild = ?", (str(guild.id),))
+            async with warnings_db.execute("DELETE FROM tempmute WHERE guild = ?", (str(guild.id),)):
+                pass
 
         with contextlib.suppress(sqlite3.Error):
-            await warnings_db.execute("DELETE FROM tempban WHERE guild = ?", (str(guild.id),))
+            async with warnings_db.execute("DELETE FROM tempban WHERE guild = ?", (str(guild.id),)):
+                pass
 
         with contextlib.suppress(sqlite3.Error):
-            await warnings_db.execute("DELETE FROM warnings WHERE guild = ?", (str(guild.id),))
+            async with warnings_db.execute("DELETE FROM warnings WHERE guild = ?", (str(guild.id),)):
+                pass
         await warnings_db.commit()
 
         with contextlib.suppress(sqlite3.Error):
-            await rr_db.execute("DELETE FROM rr WHERE guild = ?", (str(guild.id),))
+            async with rr_db.execute("DELETE FROM rr WHERE guild = ?", (str(guild.id),)):
+                pass
         await rr_db.commit()
 
         with contextlib.suppress(sqlite3.Error):
-            await muted_db.execute("DELETE FROM muted WHERE guild = ?", (str(guild.id),))
+            async with muted_db.execute("DELETE FROM muted WHERE guild = ?", (str(guild.id),)):
+                pass
         await muted_db.commit()
 
         with contextlib.suppress(sqlite3.Error):
-            await curse_db.execute("DELETE FROM curses WHERE guild = ?", (str(guild.id),))
+            async with curse_db.execute("DELETE FROM curses WHERE guild = ?", (str(guild.id),)):
+                pass
         await curse_db.commit()
 
 
@@ -246,11 +252,12 @@ class curse:
         word = word.lower()
         guildid = str(inter.guild.id)
         db = curse_db
-        await db.execute(f"""CREATE TABLE if NOT EXISTS curses(
+        async with db.execute(f"""CREATE TABLE if NOT EXISTS curses(
         curse TEXT,
         guild TEXT,
         PRIMARY KEY (curse,guild)
-        )""")
+        )"""):
+            pass
         await db.commit()
         words = word.replace(" ", "")
         words = words.split(",")
@@ -258,13 +265,14 @@ class curse:
         curses = await GuildData.curse_set(inter.guild.id, db)
         for x in words:
             if x in curses:
-                msg = f"{x} is already in the list."
+                msg = f"{x} is already banned."
                 await inter.response.send_message(msg, ephemeral=EPHEMERAL)
                 return
         for x in words:
-            await db.execute("INSERT INTO curses (curse,guild) VALUES (?,?)", (x, guildid))
+            async with db.execute("INSERT INTO curses (curse,guild) VALUES (?,?)", (x, guildid)):
+                pass
         await db.commit()
-        await inter.response.send_message("The words have been added to the list.", ephemeral=EPHEMERAL)
+        await inter.response.send_message("The words have been banned.", ephemeral=EPHEMERAL)
 
     @staticmethod
     async def remove_banned_word(inter: ApplicationCommandInteraction, word: str) -> None:
@@ -283,17 +291,18 @@ class curse:
                             in_db = True
             if not in_db:
                 if len(word) > 1:
-                    msg = "None of those words are in the list."
+                    msg = "Those words are not banned."
                 else:
-                    msg = "That word is not in the list."
+                    msg = "That word is not banned."
                 await inter.response.send_message(msg, ephemeral=EPHEMERAL)
                 return
             for x in word:
-                await db.execute("DELETE FROM curses WHERE curse = ? and guild = ?", (x, guildid))
-                await db.commit()
-            await inter.response.send_message("The words have been removed.", ephemeral=EPHEMERAL)
+                async with db.execute("DELETE FROM curses WHERE curse = ? and guild = ?", (x, guildid)):
+                    pass
+            await db.commit()
+            await inter.response.send_message("The words have been unbanned.", ephemeral=EPHEMERAL)
         except:
-            await inter.response.send_message("A list has not been created yet.", ephemeral=EPHEMERAL)
+            await inter.response.send_message("Those words are not banned.", ephemeral=EPHEMERAL)
 
     @staticmethod
     async def message_filter(message: discord.Message,
@@ -374,7 +383,8 @@ class curse:
         guildid = str(inter.guild.id)
         try:
             db = curse_db
-            await db.execute("DELETE FROM curses WHERE guild = ?", (guildid,))
+            async with db.execute("DELETE FROM curses WHERE guild = ?", (guildid,)):
+                pass
             await db.commit()
             await inter.response.send_message("Cleared all curses from this server", ephemeral=EPHEMERAL)
         except:
@@ -389,14 +399,16 @@ class mute_on_join:
         guildid = str(guild.id)
         member = str(member.id)
         db = muted_db
-        await db.execute(f"""CREATE TABLE if NOT EXISTS muted(
+        async with db.execute(f"""CREATE TABLE if NOT EXISTS muted(
         name TEXT,
         guild TEXT,
         PRIMARY KEY (name,guild)
-        )""")
+        )"""):
+            pass
         await db.commit()
         with contextlib.suppress(sqlite3.Error):
-            await db.execute("INSERT INTO muted (name,guild) VALUES (?,?)", (member, guildid))
+            async with db.execute("INSERT INTO muted (name,guild) VALUES (?,?)", (member, guildid)):
+                pass
             await db.commit()
 
     @staticmethod
@@ -405,7 +417,8 @@ class mute_on_join:
         guildid = str(guild.id)
         db = muted_db
         with contextlib.suppress(sqlite3.Error):
-            await db.execute("DELETE FROM muted WHERE name = ? and guild = ?", (member, guildid))
+            async with db.execute("DELETE FROM muted WHERE name = ? and guild = ?", (member, guildid)):
+                pass
             await db.commit()
 
     @staticmethod
@@ -434,7 +447,8 @@ class mute_on_join:
         memberid = str(after.id)
         with contextlib.suppress(sqlite3.Error):
             if role not in after.roles:
-                await db.execute("DELETE FROM muted WHERE guild = ? and name = ?", (guildid, memberid))
+                async with db.execute("DELETE FROM muted WHERE guild = ? and name = ?", (guildid, memberid)):
+                    pass
                 await db.commit()
 
 
@@ -461,15 +475,17 @@ class warnings:
         guildid = str(inter.guild.id)
         user = member
         member = str(member.id)
-        await db.execute("""CREATE TABLE if NOT EXISTS warnings(
+        async with db.execute("""CREATE TABLE if NOT EXISTS warnings(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         member_id TEXT,
         guild TEXT,
         reason TEXT
-        )""")
+        )"""):
+            pass
         await db.commit()
-        await db.execute("INSERT INTO warnings (member_id,guild,reason) VALUES (?,?,?)",
-                         (member, guildid, reason_str))
+        async with db.execute("INSERT INTO warnings (member_id,guild,reason) VALUES (?,?,?)",
+                              (member, guildid, reason_str)):
+            pass
         await db.commit()
         if reason is None:
             msg = f"Warned {user.name}#{user.discriminator}."
@@ -528,7 +544,8 @@ class warnings:
             await inter.response.send_message(msg, ephemeral=EPHEMERAL)
             return False
         if number == "all":
-            await db.execute("DELETE FROM warnings WHERE guild = ? and member_id = ?", (guild, member))
+            async with db.execute("DELETE FROM warnings WHERE guild = ? and member_id = ?", (guild, member)):
+                pass
             await db.commit()
             msg = f"Cleared all warnings from {user.name}#{user.discriminator}."
             await inter.response.send_message(msg, ephemeral=EPHEMERAL)
@@ -549,7 +566,8 @@ class warnings:
                             pos = str(pos)
                             dict.update({pos: id})
                     for x in number_list:
-                        await db.execute("DELETE FROM warnings WHERE id = ?", (dict[str(x)],))
+                        async with db.execute("DELETE FROM warnings WHERE id = ?", (dict[str(x)],)):
+                            pass
                     await db.commit()
                     number_list = list(map(str, number_list))
                     number_list = ", ".join(number_list)
@@ -565,7 +583,8 @@ class warnings:
                             id, pos = entry
                             pos = str(pos)
                             dict.update({pos: id})
-                    await db.execute("DELETE FROM warnings WHERE id = ?", (dict[str(number)],))
+                    async with db.execute("DELETE FROM warnings WHERE id = ?", (dict[str(number)],)):
+                        pass
                     await db.commit()
                     msg = f"Cleared {user.name}#{user.discriminator}'s #{number} warning."
                     await inter.response.send_message(msg, ephemeral=EPHEMERAL)
@@ -587,16 +606,18 @@ class warnings:
         memberid = str(member.id)
         guild = str(inter.guild.id)
         db = warnings_db
-        await db.execute("""CREATE TABLE IF NOT EXISTS tempmute(
+        async with db.execute("""CREATE TABLE IF NOT EXISTS tempmute(
                     guild TEXT,
                     member TEXT,
                     time DATETIME
-                    )""")
-        await db.execute("""CREATE TABLE IF NOT EXISTS tempban(
+                    )"""):
+            pass
+        async with db.execute("""CREATE TABLE IF NOT EXISTS tempban(
                     guild TEXT,
                     member TEXT,
                     time DATETIME
-                    )""")
+                    )"""):
+            pass
         await db.commit()
         try:
             async with db.execute("SELECT reason FROM warnings WHERE guild = ? and member_id = ?",
@@ -619,8 +640,9 @@ class warnings:
                         await msg.delete()
                     raise e
                 time = datetime.datetime.now() + datetime.timedelta(seconds=time)
-                await db.execute("INSERT INTO tempban (guild,member,time) VALUES (?,?,?)",
-                                 (guild, memberid, time))
+                async with db.execute("INSERT INTO tempban (guild,member,time) VALUES (?,?,?)",
+                                 (guild, memberid, time)):
+                    pass
                 await db.commit()
                 return
             elif punishments[warnings_number].punishment == "temp_mute":
@@ -638,8 +660,9 @@ class warnings:
                         await member.remove_roles(remove_role)
                     await mute_on_join.mute_add(inter.guild, member)
                     time = datetime.datetime.now() + datetime.timedelta(seconds=time)
-                    await db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)",
-                                     (guild, memberid, time))
+                    async with db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)",
+                                     (guild, memberid, time)):
+                        pass
                     await db.commit()
                     await before(warnings_number, punishments[warnings_number], member)
             else:
@@ -688,13 +711,15 @@ class warnings:
                     guild_id, member_id, time_str = entry
                     guild = bot.get_guild(int(guild_id))
                     if not isinstance(guild, discord.Guild):
-                        await db.execute("DELETE FROM tempmute WHERE guild = ?", (str(guild_id),))
+                        async with db.execute("DELETE FROM tempmute WHERE guild = ?", (str(guild_id),)):
+                            pass
                         await db.commit()
                         continue
                     member = guild.get_member(int(member_id))
                     if not isinstance(member, discord.Member):
-                        await db.execute("DELETE FROM tempmute WHERE guild = ? and member = ?",
-                                         (str(guild_id), str(member_id)))
+                        async with db.execute("DELETE FROM tempmute WHERE guild = ? and member = ?",
+                                         (str(guild_id), str(member_id))):
+                            pass
                         await db.commit()
                         continue
                     time = datetime.datetime.fromisoformat(time_str)
@@ -709,8 +734,9 @@ class warnings:
                         with contextlib.suppress(Exception):
                             await member.remove_roles(guild.get_role(int(role_add)))
                         with contextlib.suppress(sqlite3.Error):
-                            await db.execute("DELETE FROM tempmute WHERE guild = ? and member = ? and time = ?",
-                                             (str(guild.id), str(member.id), time_str))
+                            async with db.execute("DELETE FROM tempmute WHERE guild = ? and member = ? and time = ?",
+                                             (str(guild.id), str(member.id), time_str)):
+                                pass
                             await db.commit()
                         await mute_on_join.mute_remove(guild, member)
 
@@ -723,13 +749,15 @@ class warnings:
                     guild_id, member, time_str = entry
                     guild = bot.get_guild(int(guild_id))
                     if not isinstance(guild, discord.Guild):
-                        await db.execute("DELETE FROM tempban WHERE guild = ?", (str(guild_id),))
+                        async with db.execute("DELETE FROM tempban WHERE guild = ?", (str(guild_id),)):
+                            pass
                         await db.commit()
                         continue
                     time = datetime.datetime.fromisoformat(time_str)
                     if datetime.datetime.now() >= time:
-                        await db.execute("DELETE FROM tempban WHERE guild = ? and member = ? and time = ?",
-                                         (str(guild.id), str(member), time_str))
+                        async with db.execute("DELETE FROM tempban WHERE guild = ? and member = ? and time = ?",
+                                         (str(guild.id), str(member), time_str)):
+                            pass
                         await db.commit()
                         with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                             await guild.unban(discord.Object(id=int(member)))
@@ -742,13 +770,14 @@ class rr:
                       description: str) -> None:
         db = rr_db
         await inter.response.send_message("Attempting to create reaction role...", ephemeral=EPHEMERAL)
-        await db.execute("""CREATE TABLE IF NOT EXISTS rr(
+        async with db.execute("""CREATE TABLE IF NOT EXISTS rr(
         msg_id TEXT,
         emoji UNICODE,
         role TEXT,
         guild TEXT,
         channel TEXT
-        )""")
+        )"""):
+            pass
         await db.commit()
         embed = discord.Embed(
             title=title,
@@ -789,8 +818,9 @@ class rr:
                 role = role.replace("&", "")
                 number += 1
                 await msg.add_reaction(x)
-                await db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
-                                 (str(msg.id), x, str(role), str(inter.guild.id), str(inter.channel.id)))
+                async with db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
+                                 (str(msg.id), x, str(role), str(inter.guild.id), str(inter.channel.id))):
+                    pass
             await inter.followup.send("Successfully created the reaction role.", ephemeral=EPHEMERAL)
             await db.commit()
         else:
@@ -810,8 +840,9 @@ class rr:
                 return
             msg = await inter.channel.send(embed=embed)
             await msg.add_reaction(emoji)
-            await db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
-                             (str(msg.id), emoji, str(role), str(inter.guild.id), str(inter.channel.id)))
+            async with db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
+                             (str(msg.id), emoji, str(role), str(inter.guild.id), str(inter.channel.id))):
+                pass
             await db.commit()
             await inter.followup.send("Successfully created the reaction role.", ephemeral=EPHEMERAL)
 
@@ -856,11 +887,10 @@ class rr:
     async def clear_all(inter: ApplicationCommandInteraction) -> None:
         guild = str(inter.guild.id)
         db = rr_db
-        try:
-            await db.execute("DELETE FROM rr WHERE guild = ?", (guild,))
+        with contextlib.suppress(sqlite3.Error):
+            async with db.execute("DELETE FROM rr WHERE guild = ?", (guild,)):
+                pass
             await db.commit()
-        except:
-            return
         msg = "Deleted all reaction role info for this server."
         await inter.response.send_message(msg, ephemeral=EPHEMERAL)
 
@@ -873,7 +903,8 @@ class rr:
         message_id = message_id.split(",")
         for x in message_id:
             try:
-                await db.execute("DELETE FROM rr WHERE guild = ? and msg_id = ?", (guild, x))
+                async with db.execute("DELETE FROM rr WHERE guild = ? and msg_id = ?", (guild, x)):
+                    pass
             except:
                 break
         await db.commit()
@@ -893,9 +924,10 @@ class rr:
                 async for entry in cursor:
                     msg_id = entry[0]
                     if msg_id == id:
-                        await db.execute("DELETE FROM rr WHERE msg_id = ? and guild = ?", (msg_id, guild))
-                        await db.commit()
-                        return
+                        async with db.execute("DELETE FROM rr WHERE msg_id = ? and guild = ?", (msg_id, guild)):
+                            pass
+                        break
+                await db.commit()
 
     @staticmethod
     async def clear_on_channel_delete(channel: discord.TextChannel) -> None:
@@ -907,10 +939,11 @@ class rr:
                 async for entry in cursor:
                     channel = int(entry[0])
                     if channel == channel_id:
-                        await db.execute("DELETE FROM rr WHERE guild = ? and channel = ?",
-                                         (str(guild), str(channel)))
-                        await db.commit()
+                        async with db.execute("DELETE FROM rr WHERE guild = ? and channel = ?",
+                                              (str(guild), str(channel))):
+                            pass
                         break
+                await db.commit()
 
     @staticmethod
     async def clear_on_thread_delete(thread: discord.Thread) -> None:
@@ -922,10 +955,11 @@ class rr:
                 async for entry in cursor:
                     channel = int(entry[0])
                     if channel == thread_id:
-                        await db.execute("DELETE FROM rr WHERE guild = ? and channel = ?",
-                                         (str(guild), str(channel)))
-                        await db.commit()
+                        async with db.execute("DELETE FROM rr WHERE guild = ? and channel = ?",
+                                              (str(guild), str(channel))):
+                            pass
                         break
+                await db.commit()
 
     @staticmethod
     async def clear_on_bulk_message_delete(payload: discord.RawBulkMessageDeleteEvent) -> None:
@@ -940,8 +974,11 @@ class rr:
                     msg_id = int(entry[0])
                     for id in ids:
                         if id == msg_id:
-                            await db.execute("DELETE FROM rr WHERE guild = ? and msg_id = ?",
-                                             (str(guild), str(msg_id)))
+                            async with db.execute("DELETE FROM rr WHERE guild = ? and msg_id = ?",
+                                                  (str(guild), str(msg_id))):
+                                pass
+                        break
+                    break
             await db.commit()
 
     @staticmethod
