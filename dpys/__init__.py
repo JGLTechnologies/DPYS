@@ -37,7 +37,7 @@ from .utils import GuildData
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.5.3"
+version = "5.5.4"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -272,7 +272,7 @@ class curse:
             async with db.execute("INSERT INTO curses (curse,guild) VALUES (?,?)", (x, guildid)):
                 pass
         await db.commit()
-        await inter.response.send_message("The words have been banned.", ephemeral=EPHEMERAL)
+        await inter.response.send_message("Those words have been banned.", ephemeral=EPHEMERAL)
 
     @staticmethod
     async def remove_banned_word(inter: ApplicationCommandInteraction, word: str) -> None:
@@ -300,7 +300,7 @@ class curse:
                 async with db.execute("DELETE FROM curses WHERE curse = ? and guild = ?", (x, guildid)):
                     pass
             await db.commit()
-            await inter.response.send_message("The words have been unbanned.", ephemeral=EPHEMERAL)
+            await inter.response.send_message("Those words have been unbanned.", ephemeral=EPHEMERAL)
         except:
             await inter.response.send_message("Those words are not banned.", ephemeral=EPHEMERAL)
 
