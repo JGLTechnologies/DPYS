@@ -25,6 +25,7 @@ SOFTWARE.
 import contextlib
 import os
 import sqlite3
+import time
 from typing import *
 import typing
 import disnake as discord
@@ -37,7 +38,7 @@ from .utils import GuildData
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.5.5"
+version = "5.5.6"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -467,7 +468,7 @@ class warnings:
 
     @staticmethod
     async def warn(inter: ApplicationCommandInteraction, member: discord.Member,
-                   reason: typing.Optional[str] = None) -> None:
+                   reason: typing.Optional[str] = None, expires: Optional[int] = -1) -> None:
         db = warnings_db
         if len(str(reason)) > 256:
             reason = reason[:256]
@@ -479,12 +480,13 @@ class warnings:
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         member_id TEXT,
         guild TEXT,
-        reason TEXT
+        reason TEXT,
+        expires INTEGER
         )"""):
             pass
         await db.commit()
-        async with db.execute("INSERT INTO warnings (member_id,guild,reason) VALUES (?,?,?)",
-                              (member, guildid, reason_str)):
+        async with db.execute("INSERT INTO warnings (member_id,guild,reason,expires) VALUES (?,?,?,?)",
+                              (member, guildid, reason_str, expires)):
             pass
         await db.commit()
         if reason is None:
@@ -713,14 +715,12 @@ class warnings:
                     if not isinstance(guild, discord.Guild):
                         async with db.execute("DELETE FROM tempmute WHERE guild = ?", (str(guild_id),)):
                             pass
-                        await db.commit()
                         continue
                     member = guild.get_member(int(member_id))
                     if not isinstance(member, discord.Member):
                         async with db.execute("DELETE FROM tempmute WHERE guild = ? and member = ?",
                                               (str(guild_id), str(member_id))):
                             pass
-                        await db.commit()
                         continue
                     time = datetime.datetime.fromisoformat(time_str)
                     role_add = await add_role_func(int(guild_id))
@@ -737,8 +737,8 @@ class warnings:
                             async with db.execute("DELETE FROM tempmute WHERE guild = ? and member = ? and time = ?",
                                                   (str(guild.id), str(member.id), time_str)):
                                 pass
-                            await db.commit()
                         await mute_on_join.mute_remove(guild, member)
+            await db.commit()
 
     @staticmethod
     async def temp_ban_loop(bot: commands.Bot) -> None:
@@ -751,16 +751,30 @@ class warnings:
                     if not isinstance(guild, discord.Guild):
                         async with db.execute("DELETE FROM tempban WHERE guild = ?", (str(guild_id),)):
                             pass
-                        await db.commit()
                         continue
                     time = datetime.datetime.fromisoformat(time_str)
                     if datetime.datetime.now() >= time:
                         async with db.execute("DELETE FROM tempban WHERE guild = ? and member = ? and time = ?",
                                               (str(guild.id), str(member), time_str)):
                             pass
-                        await db.commit()
                         with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                             await guild.unban(discord.Object(id=int(member)))
+                await db.commit()
+
+    @staticmethod
+    async def expire_loop() -> None:
+        db = warnings_db
+        with contextlib.suppress(sqlite3.Error):
+            async with db.execute("SELECT id,expires FROM warnings") as cursor:
+                async for entry in cursor:
+                    id, expires = entry
+                    if expires == -1:
+                        continue
+                    if time.time() >= expires:
+                        async with db.execute("DELETE FROM warnings WHERE id=?", (id,)):
+                            pass
+                await db.commit()
+
 
 
 class rr:

@@ -462,15 +462,16 @@ async def rr_clear_on_thread_delete(thread: disnake.Thread):
 Warn:
 
 ```python
-async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member,
-               reason: typing.Optional[str] = None) -> None
+async def warn(inter: ApplicationCommandInteraction, member: discord.Member,
+                   reason: typing.Optional[str] = None, expires: Optional[int] = -1) -> None:
 ```
 
 ```python
 @bot.slash_command(name="warn")
 async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param(),
                reason: str = commands.Param(default=None)):
-    await dpys.warnings.warn(inter, member, reason)
+    # Warning will expire in 1 day
+    await dpys.warnings.warn(inter, member, reason, time.now() + 86400)
 ```
 
 <br>
@@ -538,6 +539,14 @@ class DpysLoops(commands.Cog):
         await dpys.warnings.temp_mute_loop(self.bot, GET_MUTE_ROLE_ID, GET_MUTE_REMOVE_ROLE_ID)
 
     @dpys_tempmute_loop.before_loop
+    async def before_dpys_tempmute_loop(self):
+        await self.bot.wait_until_ready()
+        
+    @tasks.loop(minutes=30)
+    async def dpys_expire(self):
+        await dpys.warnings.expire_loop()
+        
+    @dpys_expire.before_loop
     async def before_dpys_tempmute_loop(self):
         await self.bot.wait_until_ready()
 
