@@ -37,7 +37,7 @@ from .utils import GuildData
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.5.4"
+version = "5.5.5"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -386,9 +386,9 @@ class curse:
             async with db.execute("DELETE FROM curses WHERE guild = ?", (guildid,)):
                 pass
             await db.commit()
-            await inter.response.send_message("Cleared all curses from this server", ephemeral=EPHEMERAL)
+            await inter.response.send_message("Unbanned all words from this server.", ephemeral=EPHEMERAL)
         except:
-            msg = "There is not a curse list for this server."
+            msg = "There are no banned words on this server."
             await inter.response.send_message(msg, ephemeral=EPHEMERAL)
 
 
