@@ -641,7 +641,7 @@ class warnings:
                     raise e
                 time = datetime.datetime.now() + datetime.timedelta(seconds=time)
                 async with db.execute("INSERT INTO tempban (guild,member,time) VALUES (?,?,?)",
-                                 (guild, memberid, time)):
+                                      (guild, memberid, time)):
                     pass
                 await db.commit()
                 return
@@ -661,7 +661,7 @@ class warnings:
                     await mute_on_join.mute_add(inter.guild, member)
                     time = datetime.datetime.now() + datetime.timedelta(seconds=time)
                     async with db.execute("INSERT INTO tempmute (guild,member,time) VALUES (?,?,?)",
-                                     (guild, memberid, time)):
+                                          (guild, memberid, time)):
                         pass
                     await db.commit()
                     await before(warnings_number, punishments[warnings_number], member)
@@ -718,7 +718,7 @@ class warnings:
                     member = guild.get_member(int(member_id))
                     if not isinstance(member, discord.Member):
                         async with db.execute("DELETE FROM tempmute WHERE guild = ? and member = ?",
-                                         (str(guild_id), str(member_id))):
+                                              (str(guild_id), str(member_id))):
                             pass
                         await db.commit()
                         continue
@@ -735,7 +735,7 @@ class warnings:
                             await member.remove_roles(guild.get_role(int(role_add)))
                         with contextlib.suppress(sqlite3.Error):
                             async with db.execute("DELETE FROM tempmute WHERE guild = ? and member = ? and time = ?",
-                                             (str(guild.id), str(member.id), time_str)):
+                                                  (str(guild.id), str(member.id), time_str)):
                                 pass
                             await db.commit()
                         await mute_on_join.mute_remove(guild, member)
@@ -756,7 +756,7 @@ class warnings:
                     time = datetime.datetime.fromisoformat(time_str)
                     if datetime.datetime.now() >= time:
                         async with db.execute("DELETE FROM tempban WHERE guild = ? and member = ? and time = ?",
-                                         (str(guild.id), str(member), time_str)):
+                                              (str(guild.id), str(member), time_str)):
                             pass
                         await db.commit()
                         with contextlib.suppress(discord.Forbidden, discord.HTTPException):
@@ -819,7 +819,7 @@ class rr:
                 number += 1
                 await msg.add_reaction(x)
                 async with db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
-                                 (str(msg.id), x, str(role), str(inter.guild.id), str(inter.channel.id))):
+                                      (str(msg.id), x, str(role), str(inter.guild.id), str(inter.channel.id))):
                     pass
             await inter.followup.send("Successfully created the reaction role.", ephemeral=EPHEMERAL)
             await db.commit()
@@ -841,7 +841,7 @@ class rr:
             msg = await inter.channel.send(embed=embed)
             await msg.add_reaction(emoji)
             async with db.execute("INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
-                             (str(msg.id), emoji, str(role), str(inter.guild.id), str(inter.channel.id))):
+                                  (str(msg.id), emoji, str(role), str(inter.guild.id), str(inter.channel.id))):
                 pass
             await db.commit()
             await inter.followup.send("Successfully created the reaction role.", ephemeral=EPHEMERAL)
