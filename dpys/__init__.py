@@ -38,7 +38,7 @@ from .utils import GuildData
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.5.7"
+version = "5.5.8"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -461,7 +461,7 @@ class warnings:
             if punishment not in ["temp_ban", "temp_mute", "mute", "ban", "kick", "timeout"]:
                 raise Exception("Invalid punishment.")
             self.punishment = punishment
-            if not punishment.startswith("temp") or not punishment == "timeout":
+            if not punishment.startswith("temp") and not punishment == "timeout":
                 self.duration = None
             else:
                 self.duration = duration
