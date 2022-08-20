@@ -40,9 +40,9 @@ import dpys
 from disnake.ext import commands
 
 bot = commands.AutoShardedBot(command_prefix="!")
-TOKEN = "Your Token
+TOKEN = "Your Token"
 
-bot.loop.create_task(dpys.setup(bot, DIR))
+bot.loop.create_task(dpys.setup(bot, "database directory"))
 bot.run()
 ```
 
@@ -156,7 +156,7 @@ bot.run(TOKEN)
 
 # Documentation
 
-You will here 'mute remove role' mentioned a lot. This is just an optional role that gets removed when a member is
+You will hear 'mute remove role' mentioned a lot. This is just an optional role that gets removed when a member is
 muted, and added back when they are unmuted.
 
 ## Admin class
