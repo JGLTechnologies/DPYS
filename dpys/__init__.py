@@ -38,7 +38,7 @@ from .utils import GuildData
 RED = 0xD40C00
 BLUE = 0x0000FF
 GREEN = 0x32C12C
-version = "5.5.8"
+version = "5.5.9"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -114,7 +114,7 @@ class admin:
     async def mute(inter: ApplicationCommandInteraction, member: discord.Member, role_add: int,
                    role_remove: typing.Optional[int] = None, reason: str = None, msg: str = None) -> None:
         if inter.guild.get_role(role_add) in member.roles:
-            await inter.response.send_message(f"{member.name}#{member.discriminator} is already muted.",
+            await inter.response.send_message(f"{member.display_name} is already muted.",
                                               ephemeral=EPHEMERAL)
             return
         if len(str(reason)) > 256:
@@ -126,17 +126,17 @@ class admin:
             with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                 await member.remove_roles(inter.guild.get_role(role_remove))
         if reason is None:
-            await inter.response.send_message(msg or f"Muted {str(member)}.", ephemeral=EPHEMERAL)
+            await inter.response.send_message(msg or f"Muted {member.display_name}.", ephemeral=EPHEMERAL)
         else:
             await inter.response.send_message(
-                msg or f"Muted {member.name}#{member.discriminator}. Reason: {reason}",
+                msg or f"Muted {member.display_name}. Reason: {reason}",
                 ephemeral=EPHEMERAL)
 
     @staticmethod
     async def unmute(inter: ApplicationCommandInteraction, member: discord.Member, role_remove: int,
                      role_add: typing.Optional[int] = None, msg: str = None) -> bool:
         if inter.guild.get_role(role_remove) not in member.roles:
-            await inter.response.send_message(f"{member.name}#{member.discriminator} is not muted.",
+            await inter.response.send_message(f"{member.display_name} is not muted.",
                                               ephemeral=EPHEMERAL)
             return False
         else:
@@ -146,7 +146,7 @@ class admin:
             if role_add is not None:
                 with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                     await member.add_roles(inter.guild.get_role(role_add))
-            await inter.response.send_message(msg or f"Unmuted {member.name}#{member.discriminator}.",
+            await inter.response.send_message(msg or f"Unmuted {member.display_name}.",
                                               ephemeral=EPHEMERAL)
             return True
 
@@ -170,9 +170,9 @@ class admin:
             reason = reason[:256]
         await member.kick(reason=reason)
         if reason is None:
-            message = msg or f"Kicked {member.name}#{member.discriminator}."
+            message = msg or f"Kicked {member.display_name}."
         else:
-            message = msg or f"Kicked {member.name}#{member.discriminator}. Reason: {reason}"
+            message = msg or f"Kicked {member.display_name}. Reason: {reason}"
         await inter.response.send_message(message, ephemeral=EPHEMERAL)
 
     @staticmethod
@@ -182,9 +182,9 @@ class admin:
             reason = reason[:256]
         await member.ban(reason=reason)
         if reason is None:
-            message = msg or f"Banned {member.name}#{member.discriminator}."
+            message = msg or f"Banned {member.display_name}."
         else:
-            message = msg or f"Banned {member.name}#{member.discriminator}. Reason: {reason}"
+            message = msg or f"Banned {member.display_name}. Reason: {reason}"
         await inter.response.send_message(message, ephemeral=EPHEMERAL)
 
     @staticmethod
@@ -205,12 +205,12 @@ class admin:
             end_timeout = utils.get_discord_date(until.timestamp())
         else:
             await member.timeout(reason=reason)
-            await inter.response.send_message(f"Removed timeout from {str(member)}.", ephemeral=EPHEMERAL)
+            await inter.response.send_message(f"Removed timeout from {member.display_name}.", ephemeral=EPHEMERAL)
             return
         if reason is None:
-            message = msg or f"Timed out {str(member)} until {end_timeout}."
+            message = msg or f"Timed out {member.display_name} until {end_timeout}."
         else:
-            message = msg or f"Timed out {str(member)} until {end_timeout}. Reason: {reason}"
+            message = msg or f"Timed out {member.display_name} until {end_timeout}. Reason: {reason}"
         await inter.response.send_message(message, ephemeral=EPHEMERAL)
 
     @staticmethod
@@ -220,9 +220,9 @@ class admin:
             reason = reason[:256]
         await member.ban(reason=reason)
         if reason is None:
-            message = msg or f"Soft banned {member.name}#{member.discriminator}."
+            message = msg or f"Soft banned {member.display_name}."
         else:
-            message = msg or f"Soft banned {member.name}#{member.discriminator}. Reason: {reason}"
+            message = msg or f"Soft banned {member.display_name}. Reason: {reason}"
         await inter.response.send_message(message, ephemeral=EPHEMERAL)
         await member.unban()
 
@@ -232,12 +232,7 @@ class admin:
         if isinstance(member, int):
             ban = [ban async for ban in bans if ban.user.id == member]
         else:
-            try:
-                name, discrim = member.split("#")
-            except ValueError:
-                raise commands.errors.UserNotFound(member)
-            ban = [ban async for ban in bans if ban.user.discriminator ==
-                   discrim and ban.user.name == name]
+            ban = [ban async for ban in bans if ban.user.global_name == member]
         if not ban:
             await inter.response.send_message(f"{member} is not banned.", ephemeral=EPHEMERAL)
             return False
@@ -755,7 +750,7 @@ class warnings:
                     time = datetime.datetime.fromisoformat(time_str)
                     if datetime.datetime.now() >= time:
                         async with db.execute("DELETE FROM tempban WHERE guild = ? and member = ? and time = ?",
-                                              (str(guild.id), str(member), time_str)):
+                                              (str(guild.id), member.display_name, time_str)):
                             pass
                         with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                             await guild.unban(discord.Object(id=int(member)))
