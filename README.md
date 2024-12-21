@@ -568,14 +568,21 @@ def setup(bot):
 Warnings:
 
 ```python
-async def warnings_list(inter: disnake.ApplicationCommandInteraction, member: disnake.Member) -> None
+async def warnings(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, number: int = 0) -> None
 ```
-
+The number is what warning you want to see. Set it to 0 to see the 5 most recent warnings.
 ```python
 @bot.slash_command(name="warnings")
 async def warnings(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param()):
-    await dpys.warnings.warnings_list(inter, member)
+    await dpys.warnings.warnings(inter, member)
 ```
+
+<br>
+
+```
+warnings_list(guild: int, member_id: int)
+```
+Returns the actual list of warnings for a member
 
 <br>
 

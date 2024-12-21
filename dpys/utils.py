@@ -21,8 +21,7 @@ class GuildData:
         curse_set = set()
         try:
             async with db.execute(
-                    "SELECT curse FROM curses WHERE guild = ?", (str(
-                        guild_id),)
+                "SELECT curse FROM curses WHERE guild = ?", (str(guild_id),)
             ) as cursor:
                 async for entry in cursor:
                     curse_set.add(entry[0])
@@ -76,7 +75,7 @@ class DiscordUtils:
     async def nitro_code_is_valid(code: str) -> bool:
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                    f"https://discord.com/api/v8/entitlements/gift-codes/{code}"
+                f"https://discord.com/api/v8/entitlements/gift-codes/{code}"
             ) as r:
                 data = await r.json()
         try:
