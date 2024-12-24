@@ -1,7 +1,5 @@
-import asyncio
 import sqlite3
 import aiosqlite
-import os
 import aiohttp
 import time
 from pathlib import Path

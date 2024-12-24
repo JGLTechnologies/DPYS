@@ -34,7 +34,7 @@ import datetime
 import aiosqlite
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
-from .utils import GuildData
+from .utils import GuildData, get_discord_date
 
 COLOR = None
 version = "5.6.0"
@@ -67,7 +67,6 @@ async def setup(
 
 
 class misc:
-
     @staticmethod
     async def reload(
         inter: ApplicationCommandInteraction, bot: commands.Bot, cogs: typing.List[str]
@@ -130,7 +129,6 @@ class misc:
 
 
 class admin:
-
     @staticmethod
     async def mute(
         inter: ApplicationCommandInteraction,
@@ -153,6 +151,7 @@ class admin:
         if role_remove is not None:
             with contextlib.suppress(discord.Forbidden, discord.HTTPException):
                 await member.remove_roles(inter.guild.get_role(role_remove))
+        await member.edit(reason=reason, voice_channel=None)
         if reason is None:
             await inter.response.send_message(
                 msg or f"Muted {member.display_name}.", ephemeral=EPHEMERAL
@@ -250,20 +249,20 @@ class admin:
         if duration is not None:
             await member.timeout(duration=duration, reason=reason)
             if isinstance(duration, datetime.timedelta):
-                end_timeout = utils.get_discord_date(
+                end_timeout = get_discord_date(
                     (datetime.datetime.now() + duration).timestamp()
                 )
             else:
-                end_timeout = utils.get_discord_date(
+                end_timeout = get_discord_date(
                     (
                         datetime.datetime.now() + datetime.timedelta(seconds=duration)
                     ).timestamp()
                 )
         elif until is not None:
             await member.timeout(until=until, reason=reason)
-            end_timeout = utils.get_discord_date(until.timestamp())
+            end_timeout = get_discord_date(until.timestamp())
         else:
-            await member.timeout(reason=reason)
+            await member.edit(timeout=None)
             await inter.response.send_message(
                 f"Removed timeout from {member.display_name}.", ephemeral=EPHEMERAL
             )
@@ -318,7 +317,6 @@ class admin:
 
 
 class curse:
-
     @staticmethod
     async def add_banned_word(inter: ApplicationCommandInteraction, word: str) -> None:
         word = word.lower()
@@ -509,7 +507,6 @@ class curse:
 
 
 class mute_on_join:
-
     @staticmethod
     async def mute_add(guild: discord.Guild, member: discord.Member) -> None:
         guildid = str(guild.id)
@@ -544,24 +541,31 @@ class mute_on_join:
             await db.commit()
 
     @staticmethod
-    async def mute_on_join(member: discord.Member, role: int) -> None:
-        user = member
+    async def mute_on_join(
+        member: discord.Member, role_add: int, role_remove: typing.Optional[int] = None
+    ) -> None:
         guildid = str(member.guild.id)
-        muted_role = member.guild.get_role(role)
+        muted_role = member.guild.get_role(role_add)
         if not isinstance(muted_role, discord.Role):
             return
-        member = str(member.id)
         db = muted_db
         with contextlib.suppress(sqlite3.Error):
             async with db.execute(
                 "SELECT name FROM muted WHERE guild = ?", (guildid,)
             ) as cursor:
                 async for entry in cursor:
-                    if entry[0] == member:
+                    if entry[0] == str(member.id):
                         with contextlib.suppress(
                             discord.Forbidden, discord.HTTPException
                         ):
-                            await user.add_roles(muted_role)
+                            await member.add_roles(muted_role)
+                        if role_remove is not None:
+                            with contextlib.suppress(
+                                discord.Forbidden, discord.HTTPException
+                            ):
+                                await member.remove_roles(
+                                    member.guild.get_role(role_remove)
+                                )
 
     @staticmethod
     async def manual_unmute_check(after: discord.Member, roleid: int) -> None:
@@ -879,7 +883,14 @@ class warnings:
                     if add_role is not None:
                         await member.add_roles(add_role)
                     if remove_role is not None:
-                        await member.remove_roles(remove_role)
+                        with contextlib.suppress(
+                            discord.Forbidden, discord.HTTPException
+                        ):
+                            await member.remove_roles(remove_role)
+                    await member.edit(
+                        reason=f"You have received {warnings_number} warning(s).",
+                        voice_channel=None,
+                    )
                     await mute_on_join.mute_add(inter.guild, member)
                     time = datetime.datetime.now() + datetime.timedelta(seconds=time)
                     async with db.execute(
@@ -930,9 +941,14 @@ class warnings:
                 if not isinstance(add_role, discord.Role):
                     return
                 if remove_role is not None:
-                    await member.remove_roles(remove_role)
+                    with contextlib.suppress(discord.Forbidden, discord.HTTPException):
+                        await member.remove_roles(remove_role)
                 if add_role is not None:
                     await member.add_roles(add_role)
+                await member.edit(
+                    reason=f"You have received {warnings_number} warning(s).",
+                    voice_channel=None,
+                )
                 await mute_on_join.mute_add(inter.guild, member)
                 await before(warnings_number, punishments[warnings_number], member)
 
@@ -972,9 +988,13 @@ class warnings:
                     else:
                         role_remove = await remove_role_func(int(guild_id))
                     if datetime.datetime.now() >= time:
-                        with contextlib.suppress(Exception):
+                        with contextlib.suppress(
+                            discord.Forbidden, discord.HTTPException
+                        ):
                             await member.add_roles(guild.get_role(int(role_remove)))
-                        with contextlib.suppress(Exception):
+                        with contextlib.suppress(
+                            discord.Forbidden, discord.HTTPException
+                        ):
                             await member.remove_roles(guild.get_role(int(role_add)))
                         with contextlib.suppress(sqlite3.Error):
                             async with db.execute(
@@ -1034,7 +1054,6 @@ class warnings:
 
 
 class rr:
-
     @staticmethod
     async def command(
         inter: ApplicationCommandInteraction,

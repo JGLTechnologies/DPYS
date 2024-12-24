@@ -323,13 +323,13 @@ async def unmute(inter, member: dicord.Member = commands.Param()):
 Mute On Join Event Listener:
 
 ```python
-async def mute_on_join(member: disnake.Member, role: int) -> None
+async def mute_on_join(member: disnake.Member, role_add: int, role_remove: Optional[int] = None) -> None
 ```
 
 ```python
 @bot.listen("on_member_join")
 async def mute_on_join(member: disnake.Member):
-    await dpys.mute_on_join.mute_on_join(member, MUTE_ROLE_ID)
+    await dpys.mute_on_join.mute_on_join(member, MUTE_ROLE_ID, MUTE_REMOVE_ROLE)
 ```
 
 <br>
