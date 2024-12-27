@@ -19,12 +19,11 @@ class ListScroller(disnake.ui.View):
         global list_scrollers
         if list_scrollers.get(inter.guild.id) is None:
             list_scrollers[inter.guild.id] = []
-        guild_list_scrollers = list_scrollers.get(inter.guild.id)
-        for i, ls in enumerate(guild_list_scrollers):
-            if ls.member_id ==inter.author.id and ls.command_name == inter.application_command.name:
+        for i, ls in enumerate(list_scrollers[inter.guild.id]):
+            if ls.member_id == inter.author.id and ls.command_name == inter.application_command.name:
+                ls.clear_items()
                 ls.stop()
-                guild_list_scrollers.pop(i)
-        list_scrollers[inter.guild.id].append(self)
+                ls.clear_data()
         super().__init__(timeout=timeout)
         self.pages = math.ceil(len(array)/count)
         self.count = count
@@ -36,8 +35,9 @@ class ListScroller(disnake.ui.View):
         self.pos = 0
         self.next_lock = asyncio.Semaphore(1)
         self.prev_lock = asyncio.Semaphore(1)
-        self.next = Next(label="Next", style=disnake.ButtonStyle.grey, custom_id="next")
-        self.prev = Prev(label="Prev", style=disnake.ButtonStyle.grey, custom_id="prev")
+        self.next = Next(label="Next", style=disnake.ButtonStyle.grey, custom_id=f"next{id(self)}")
+        self.prev = Prev(label="Prev", style=disnake.ButtonStyle.grey, custom_id=f"prev{id(self)}")
+        list_scrollers[inter.guild.id].append(self)
 
     async def reset(self):
         self.pages = math.ceil(len(self.list) / self.count)
@@ -57,10 +57,9 @@ class ListScroller(disnake.ui.View):
         self.add_item(self.next)
 
     def clear_data(self):
-        guild_list_scrollers = list_scrollers[self.guild_id]
-        for i, ls in enumerate(guild_list_scrollers):
+        for i, ls in enumerate(list_scrollers[self.guild_id]):
             if ls == self:
-                guild_list_scrollers.pop(i)
+                list_scrollers[self.guild_id].pop(i)
 
     def on_timeout(self) -> None:
         self.clear_data()

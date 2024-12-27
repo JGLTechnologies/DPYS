@@ -41,7 +41,7 @@ import asyncio
 from .utils import GuildData, get_discord_date
 
 COLOR = None
-version = "5.6.2"
+version = "5.6.3"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
@@ -1343,7 +1343,7 @@ class rr:
                         channel = inter.guild.get_channel(int(channel))
                         reaction_roles.append((roles, emojis, msg_id, channel))
             if len(reaction_roles) > 0:
-                def func(array, start_num, page_info):
+                def func(array, _, page_info):
                     embed = disnake.Embed(title=f"Reaction Roles", color=COLOR)
                     embed.add_field(name=f"Roles", value=" ".join([f"{role.mention if role is not None else '@deleted-role'}" for role in array[0][0]]), inline=False)
                     embed.add_field(name=f"Emojis", value=" ".join(array[0][1]), inline=False)
@@ -1354,7 +1354,7 @@ class rr:
                     return embed
                 view = utils.ListScroller(1, reaction_roles, func, inter)
                 embed = func(reaction_roles[0:1], 1, (1, len(reaction_roles)))
-                delete_button = rr.Delete(label="Delete", style=disnake.ButtonStyle.red, custom_id="delete")
+                delete_button = rr.Delete(label="Delete", style=disnake.ButtonStyle.red, custom_id=f"delete{id(view)}")
                 view.delete_lock = asyncio.Semaphore(1)
                 await view.start()
                 view.add_item(delete_button)
