@@ -36,13 +36,12 @@ import aiosqlite
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
 from dpys.utils import ListScroller
-from humanize import number
 import asyncio
 
 from .utils import GuildData, get_discord_date
 
 COLOR = None
-version = "5.6.0"
+version = "5.6.2"
 EPHEMERAL = True
 warnings_db: aiosqlite.Connection
 muted_db: aiosqlite.Connection
