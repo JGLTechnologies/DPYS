@@ -36,6 +36,8 @@ import aiosqlite
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
 from dpys.utils import ListScroller
+from humanize import number
+import asyncio
 
 from .utils import GuildData, get_discord_date
 
@@ -1042,48 +1044,42 @@ class rr:
             pass
         await db.commit()
         embed = discord.Embed(title=title, color=COLOR, description=description)
-        if "," in emoji:
-            emoji = emoji.replace(" ", "")
-            emoji_list = emoji.split(",")
-            role = role.replace(" ", "")
-            role_list = role.split(",")
-            if len(role_list) != len(emoji_list):
-                await inter.followup.send(
-                    "Emoji list must be same length as role list.", ephemeral=EPHEMERAL
-                )
-                return
+        role = role.replace("<", "")
+        role = role.replace(">", "")
+        role = role.replace("@", "")
+        role = role.replace("&", "")
+        emoji = emoji.replace(" ", "")
+        emoji_list = emoji.split(",")
+        try:
+            role_list = [inter.guild.get_role(int(r)) for r in role.split(",")]
+        except:
+            await inter.followup.send("Invalid role", ephemeral=EPHEMERAL)
+            return
+        if len(role_list) != len(emoji_list):
+            await inter.followup.send(
+                "Emoji list must be same length as role list.", ephemeral=EPHEMERAL
+            )
+            return
+        if len(emoji_list) > 1:
             for role in role_list:
-                role = role.replace("<", "")
-                role = role.replace(">", "")
-                role = role.replace("@", "")
-                role = role.replace("&", "")
-                try:
-                    if inter.guild.get_role(int(role)) is None:
-                        await inter.followup.send("Invalid role", ephemeral=EPHEMERAL)
-                        return
-                except:
-                    await inter.followup.send("Invalid role", ephemeral=EPHEMERAL)
-                    return
+               if role is None:
+                await inter.followup.send("Invalid roles", ephemeral=EPHEMERAL)
+                return
             msg = await inter.channel.send(embed=embed)
-            number = 0
-            for x in emoji_list:
-                role = role_list[number]
-                if "@" not in role:
-                    await inter.followup.send("Invalid role", ephemeral=EPHEMERAL)
+            for i, e in enumerate(emoji_list):
+                role = role_list[i]
+                try:
+                    await msg.add_reaction(e)
+                except (discord.HTTPException):
+                    await inter.followup.send("Invalid emojis", ephemeral=EPHEMERAL)
                     await msg.delete()
                     return
-                role = role.replace("<", "")
-                role = role.replace(">", "")
-                role = role.replace("@", "")
-                role = role.replace("&", "")
-                number += 1
-                await msg.add_reaction(x)
                 async with db.execute(
                     "INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
                     (
                         str(msg.id),
-                        x,
-                        str(role),
+                        e,
+                        str(role.id),
                         str(inter.guild.id),
                         str(inter.channel.id),
                     ),
@@ -1094,28 +1090,23 @@ class rr:
             )
             await db.commit()
         else:
-            if "@" not in role:
-                await inter.followup.send("Invalid role", ephemeral=EPHEMERAL)
-                return
-            role = role.replace("<", "")
-            role = role.replace(">", "")
-            role = role.replace("@", "")
-            role = role.replace("&", "")
-            try:
-                if inter.guild.get_role(int(role)) is None:
-                    await inter.followup.send("Invalid role", ephemeral=EPHEMERAL)
-                    return
-            except:
+            role = role_list[0]
+            if role is None:
                 await inter.followup.send("Invalid role", ephemeral=EPHEMERAL)
                 return
             msg = await inter.channel.send(embed=embed)
-            await msg.add_reaction(emoji)
+            try:
+                await msg.add_reaction(emoji)
+            except (discord.HTTPException):
+                await inter.followup.send("Invalid emojis", ephemeral=EPHEMERAL)
+                await msg.delete()
+                return
             async with db.execute(
                 "INSERT INTO rr (msg_id,emoji,role,guild,channel) VALUES (?,?,?,?,?)",
                 (
                     str(msg.id),
                     emoji,
-                    str(role),
+                    str(role.id),
                     str(inter.guild.id),
                     str(inter.channel.id),
                 ),
@@ -1283,7 +1274,6 @@ class rr:
                     msg_id = int(entry[0])
                     for id in ids:
                         if id == msg_id:
-                            print(1)
                             async with db.execute(
                                 "DELETE FROM rr WHERE guild = ? and msg_id = ?",
                                 (str(guild), str(msg_id)),
@@ -1292,6 +1282,39 @@ class rr:
                         break
                     break
             await db.commit()
+
+    class Delete(disnake.ui.Button):
+        async def callback(self, inter: discord.MessageInteraction) -> None:
+            if self.view.delete_lock.locked():
+                return
+            async with self.view.delete_lock:
+                msg_id = self.view.list[self.view.pos * self.view.count:self.view.pos * self.view.count + self.view.count][0][2]
+                channel = self.view.list[self.view.pos * self.view.count:self.view.pos * self.view.count + self.view.count][0][3]
+                self.view.list.pop(self.view.pos)
+                await self.view.reset()
+                try:
+                    async with rr_db.execute(
+                            "DELETE FROM rr WHERE guild = ? and msg_id = ?", (str(inter.guild.id), str(msg_id))
+                    ):
+                        pass
+                except:
+                    pass
+                with contextlib.suppress(Exception):
+                    msg = await channel.fetch_message(msg_id)
+                    await msg.delete()
+                await rr_db.commit()
+                if len(self.view.list) == 0:
+                    self.view.clear_items()
+                    self.view.stop()
+                    await inter.response.edit_message("There are no reaction roles in this server.", view=self.view, embed=None)
+                    self.view.clear_data()
+                    return
+                await self.view.reset()
+                self.view.add_item(self)
+                embed = self.view.func(
+                    self.view.list[self.view.pos * self.view.count:self.view.pos * self.view.count + self.view.count],
+                    self.view.pos * self.view.count + 1, (self.view.pos + 1, self.view.pages))
+                await inter.response.edit_message(embed=embed, view=self.view)
 
     @staticmethod
     async def display(inter: ApplicationCommandInteraction) -> None:
@@ -1311,7 +1334,7 @@ class rr:
                         roles = []
                         emojis = []
                         channel = None
-                        msg_id = entry[0]
+                        msg_id = int(entry[0])
                         async for entry in f:
                             role, emoji, channel, msg_id = entry
                             role = inter.guild.get_role(int(role))
@@ -1332,7 +1355,10 @@ class rr:
                     return embed
                 view = utils.ListScroller(1, reaction_roles, func, inter)
                 embed = func(reaction_roles[0:1], 1, (1, len(reaction_roles)))
+                delete_button = rr.Delete(label="Delete", style=disnake.ButtonStyle.red, custom_id="delete")
+                view.delete_lock = asyncio.Semaphore(1)
                 await view.start()
+                view.add_item(delete_button)
                 await inter.send(embed=embed, view=view, ephemeral=EPHEMERAL)
                 return
         await inter.send("There are no reaction roles in this server.", ephemeral=EPHEMERAL)

@@ -39,18 +39,31 @@ class ListScroller(disnake.ui.View):
         self.next = Next(label="Next", style=disnake.ButtonStyle.grey, custom_id="next")
         self.prev = Prev(label="Prev", style=disnake.ButtonStyle.grey, custom_id="prev")
 
-    async def start(self):
-        if len(self.list) > self.count:
-            self.prev.disabled = True
-            self.add_item(self.prev)
-            self.add_item(self.next)
+    async def reset(self):
+        self.pages = math.ceil(len(self.list) / self.count)
+        self.pos = 0
+        self.clear_items()
+        if len(self.list) <= self.count:
+            self.next.disabled = True
+        self.prev.disabled = True
+        self.add_item(self.prev)
+        self.add_item(self.next)
 
-    def on_timeout(self) -> None:
+    async def start(self):
+        if len(self.list) <= self.count:
+            self.next.disabled = True
+        self.prev.disabled = True
+        self.add_item(self.prev)
+        self.add_item(self.next)
+
+    def clear_data(self):
         guild_list_scrollers = list_scrollers[self.guild_id]
         for i, ls in enumerate(guild_list_scrollers):
             if ls == self:
                 guild_list_scrollers.pop(i)
 
+    def on_timeout(self) -> None:
+        self.clear_data()
 
 
 class Next(disnake.ui.Button):
@@ -62,7 +75,12 @@ class Next(disnake.ui.Button):
             self.view.prev.disabled = False
             if len(self.view.list)-((self.view.pos+1)*self.view.count) <= 0:
                 self.disabled = True
-            embed = self.view.func(self.view.list[self.view.pos*self.view.count:self.view.pos*self.view.count+self.view.count], self.view.pos*self.view.count+1, (self.view.pos+1, self.view.pages))
+            if asyncio.iscoroutinefunction(self.view.func):
+                embed = await self.view.func(self.view.list[self.view.pos*self.view.count:self.view.pos*self.view.count+self.view.count], self.view.pos*self.view.count+1, (self.view.pos+1, self.view.pages))
+            else:
+                embed = self.view.func(
+                    self.view.list[self.view.pos * self.view.count:self.view.pos * self.view.count + self.view.count],
+                    self.view.pos * self.view.count + 1, (self.view.pos + 1, self.view.pages))
             await inter.response.edit_message(embed=embed, view=self.view)
 
 class Prev(disnake.ui.Button):
@@ -74,7 +92,12 @@ class Prev(disnake.ui.Button):
             self.view.next.disabled = False
             if self.view.pos == 0:
                 self.disabled = True
-            embed = self.view.func(self.view.list[self.view.pos*self.view.count:self.view.pos*self.view.count+self.view.count], self.view.pos*self.view.count+1, (self.view.pos+1, self.view.pages))
+            if asyncio.iscoroutinefunction(self.view.func):
+                embed = await self.view.func(self.view.list[self.view.pos*self.view.count:self.view.pos*self.view.count+self.view.count], self.view.pos*self.view.count+1, (self.view.pos+1, self.view.pages))
+            else:
+                embed = self.view.func(
+                    self.view.list[self.view.pos * self.view.count:self.view.pos * self.view.count + self.view.count],
+                    self.view.pos * self.view.count + 1, (self.view.pos + 1, self.view.pages))
             await inter.response.edit_message(embed=embed, view=self.view)
 
 
