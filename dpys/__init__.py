@@ -1179,13 +1179,11 @@ class rr:
         message_id = message_id.replace(" ", "")
         message_id = message_id.split(",")
         for x in message_id:
-            try:
+            with contextlib.suppress(Exception):
                 async with db.execute(
                     "DELETE FROM rr WHERE guild = ? and msg_id = ?", (guild, x)
                 ):
                     pass
-            except Exception:
-                break
         await db.commit()
         message_id = ", ".join(message_id)
         msg = f"Deleted all reaction role info with message ID(s): {message_id}"
