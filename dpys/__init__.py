@@ -1275,8 +1275,7 @@ class rr:
                                 (str(guild), str(msg_id)),
                             ):
                                 pass
-                        break
-                    break
+                            break
             await db.commit()
 
     class Delete(disnake.ui.Button):
