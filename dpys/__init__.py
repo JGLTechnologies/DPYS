@@ -988,7 +988,7 @@ class warnings:
                     if datetime.datetime.now() >= time:
                         async with db.execute(
                             "DELETE FROM tempban WHERE guild = ? and member = ? and time = ?",
-                            (str(guild.id), member.display_name, time_str),
+                            (str(guild.id), member, time_str),
                         ):
                             pass
                         with contextlib.suppress(
