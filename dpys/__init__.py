@@ -83,7 +83,7 @@ class misc:
             try:
                 bot.reload_extension(cog)
                 reloaded += 1
-            except:
+            except Exception:
                 continue
         await inter.send(
             f"Successfully reloaded {reloaded}/{total} extensions.", ephemeral=EPHEMERAL
@@ -386,7 +386,7 @@ class curse:
             await inter.send(
                 "Those words have been unbanned.", ephemeral=EPHEMERAL
             )
-        except:
+        except Exception:
             await inter.send(
                 "Those words are not banned.", ephemeral=EPHEMERAL
             )
@@ -416,7 +416,7 @@ class curse:
                         await message.channel.send(
                             "Do not say that here!", delete_after=5
                         )
-        except:
+        except Exception:
             return
 
     @staticmethod
@@ -445,7 +445,7 @@ class curse:
                         await message.channel.send(
                             "Do not say that here!", delete_after=5
                         )
-        except:
+        except Exception:
             return
 
     @staticmethod
@@ -459,7 +459,7 @@ class curse:
             await inter.send(
                 "Unbanned all words from this server.", ephemeral=EPHEMERAL
             )
-        except:
+        except Exception:
             msg = "There are no banned words on this server."
             await inter.send(msg, ephemeral=EPHEMERAL)
 
@@ -614,7 +614,7 @@ class warnings:
                 async for entry in cursor:
                     warn_list.append(entry[0])
                 return warn_list
-        except:
+        except Exception:
             return []
 
     @staticmethod
@@ -696,7 +696,7 @@ class warnings:
                 count = 0
                 async for _ in cursor:
                     count += 1
-        except:
+        except Exception:
             msg = f"{user.display_name} has no warnings."
             await inter.send(msg, ephemeral=EPHEMERAL)
             return False
@@ -721,18 +721,18 @@ class warnings:
                     number_list = number.split(",")
                     number_list = list(map(int, number_list))
                     number_list = sorted(number_list, reverse=True)
-                    dict = {}
+                    id_map = {}
                     async with db.execute(
                         "SELECT id,row_number() OVER (ORDER BY id) FROM warnings WHERE guild = ? and member_id = ?",
                         (guild, member),
                     ) as cursor:
                         async for entry in cursor:
-                            id, pos = entry
+                            row_id, pos = entry
                             pos = str(pos)
-                            dict.update({pos: id})
+                            id_map.update({pos: row_id})
                     for x in number_list:
                         async with db.execute(
-                            "DELETE FROM warnings WHERE id = ?", (dict[str(x)],)
+                            "DELETE FROM warnings WHERE id = ?", (id_map[str(x)],)
                         ):
                             pass
                     await db.commit()
@@ -744,24 +744,24 @@ class warnings:
                     )
                 else:
                     number = int(number)
-                    dict = {}
+                    id_map = {}
                     async with db.execute(
                         "SELECT id,row_number() OVER (ORDER BY id) FROM warnings WHERE guild = ? and member_id = ?",
                         (guild, member),
                     ) as cursor:
                         async for entry in cursor:
-                            id, pos = entry
+                            row_id, pos = entry
                             pos = str(pos)
-                            dict.update({pos: id})
+                            id_map.update({pos: row_id})
                     async with db.execute(
-                        "DELETE FROM warnings WHERE id = ?", (dict[str(number)],)
+                        "DELETE FROM warnings WHERE id = ?", (id_map[str(number)],)
                     ):
                         pass
                     await db.commit()
                     msg = f"Cleared {user.display_name}'s #{number} warning."
                     await inter.send(msg, ephemeral=EPHEMERAL)
                     return True
-            except:
+            except Exception:
                 if number == "all":
                     msg = f"{user.display_name} has no warnings."
                 else:
@@ -810,22 +810,20 @@ class warnings:
                 warnings_number = 0
                 async for _ in cursor:
                     warnings_number += 1
-        except:
+        except Exception:
             return
         if warnings_number not in punishments:
             return
         if punishments[warnings_number].duration is not None:
             if punishments[warnings_number].punishment == "temp_ban":
-                msg = await before(
-                    warnings_number, punishments[warnings_number], member
-                )
+                msg = await before(warnings_number, punishments[warnings_number], member) if before is not None else None
                 time = punishments[warnings_number].duration
                 try:
                     await member.ban(
                         reason=f"You have received {warnings_number} warning(s)."
                     )
                 except (discord.Forbidden, discord.HTTPException) as e:
-                    with contextlib.suppress(Exception):
+                    if msg is not None:
                         await msg.delete()
                     raise e
                 time = datetime.datetime.now() + datetime.timedelta(seconds=time)
@@ -864,39 +862,37 @@ class warnings:
                     ):
                         pass
                     await db.commit()
-                    await before(warnings_number, punishments[warnings_number], member)
+                    if before is not None:
+                        await before(warnings_number, punishments[warnings_number], member)
             else:
                 time = punishments[warnings_number].duration
                 await member.timeout(
                     reason=f"You have received {warnings_number} warning(s).",
                     duration=time,
                 )
-                await before(warnings_number, punishments[warnings_number], member)
+                if before is not None:
+                    await before(warnings_number, punishments[warnings_number], member)
                 return
         else:
             if punishments[warnings_number].punishment == "ban":
-                msg = await before(
-                    warnings_number, punishments[warnings_number], member
-                )
+                msg = await before(warnings_number, punishments[warnings_number], member) if before is not None else None
                 try:
                     await member.ban(
                         reason=f"You have received {warnings_number} warning(s)."
                     )
                 except (discord.Forbidden, discord.HTTPException) as e:
-                    with contextlib.suppress(Exception):
+                    if msg is not None:
                         await msg.delete()
                     raise e
                 return
             if punishments[warnings_number].punishment == "kick":
-                msg = await before(
-                    warnings_number, punishments[warnings_number], member
-                )
+                msg = await before(warnings_number, punishments[warnings_number], member) if before is not None else None
                 try:
                     await member.kick(
                         reason=f"You have received {warnings_number} warning(s)."
                     )
                 except (discord.Forbidden, discord.HTTPException) as e:
-                    with contextlib.suppress(Exception):
+                    if msg is not None:
                         await msg.delete()
                     raise e
                 return
@@ -915,7 +911,8 @@ class warnings:
                     voice_channel=None,
                 )
                 await mute_on_join.mute_add(inter.guild, member)
-                await before(warnings_number, punishments[warnings_number], member)
+                if before is not None:
+                    await before(warnings_number, punishments[warnings_number], member)
 
     @staticmethod
     async def temp_mute_loop(
@@ -991,7 +988,7 @@ class warnings:
                     if datetime.datetime.now() >= time:
                         async with db.execute(
                             "DELETE FROM tempban WHERE guild = ? and member = ? and time = ?",
-                            (str(guild.id), member.display_name, time_str),
+                            (str(guild.id), member, time_str),
                         ):
                             pass
                         with contextlib.suppress(
@@ -1009,11 +1006,11 @@ class warnings:
         with contextlib.suppress(sqlite3.Error):
             async with db.execute("SELECT id,expires FROM warnings") as cursor:
                 async for entry in cursor:
-                    id, expires = entry
+                    warning_id, expires = entry
                     if expires == -1:
                         continue
                     if time.time() >= expires:
-                        async with db.execute("DELETE FROM warnings WHERE id=?", (id,)):
+                        async with db.execute("DELETE FROM warnings WHERE id=?", (warning_id,)):
                             pass
                 await db.commit()
 
@@ -1051,7 +1048,7 @@ class rr:
         emoji_list = emoji.split(",")
         try:
             role_list = [inter.guild.get_role(int(r)) for r in role.split(",")]
-        except:
+        except Exception:
             await inter.followup.send("Invalid role", ephemeral=EPHEMERAL)
             return
         if len(role_list) != len(emoji_list):
@@ -1061,9 +1058,9 @@ class rr:
             return
         if len(emoji_list) > 1:
             for role in role_list:
-               if role is None:
-                await inter.followup.send("Invalid roles", ephemeral=EPHEMERAL)
-                return
+                if role is None:
+                    await inter.followup.send("Invalid roles", ephemeral=EPHEMERAL)
+                    return
             msg = await inter.channel.send(embed=embed)
             for i, e in enumerate(emoji_list):
                 role = role_list[i]
@@ -1182,13 +1179,11 @@ class rr:
         message_id = message_id.replace(" ", "")
         message_id = message_id.split(",")
         for x in message_id:
-            try:
+            with contextlib.suppress(Exception):
                 async with db.execute(
                     "DELETE FROM rr WHERE guild = ? and msg_id = ?", (guild, x)
                 ):
                     pass
-            except:
-                break
         await db.commit()
         message_id = ", ".join(message_id)
         msg = f"Deleted all reaction role info with message ID(s): {message_id}"
@@ -1200,17 +1195,16 @@ class rr:
             return
         db = rr_db
         guild = str(message.guild.id)
-        id = str(message.id)
+        msg_id = str(message.id)
         with contextlib.suppress(sqlite3.Error):
             async with db.execute(
                 "SELECT msg_id FROM rr WHERE guild = ?", (guild,)
             ) as cursor:
                 async for entry in cursor:
-                    msg_id = entry[0]
-                    if msg_id == id:
+                    if entry[0] == msg_id:
                         async with db.execute(
                             "DELETE FROM rr WHERE msg_id = ? and guild = ?",
-                            (id, guild),
+                            (msg_id, guild),
                         ):
                             pass
                         break
@@ -1278,8 +1272,7 @@ class rr:
                                 (str(guild), str(msg_id)),
                             ):
                                 pass
-                        break
-                    break
+                            break
             await db.commit()
 
     class Delete(disnake.ui.Button):
@@ -1296,7 +1289,7 @@ class rr:
                             "DELETE FROM rr WHERE guild = ? and msg_id = ?", (str(inter.guild.id), str(msg_id))
                     ):
                         pass
-                except:
+                except Exception:
                     pass
                 with contextlib.suppress(Exception):
                     msg = await channel.fetch_message(msg_id)

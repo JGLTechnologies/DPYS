@@ -24,7 +24,7 @@ classifiers = [
 setup(
     name="dpys",
     version=VERSION,
-    description="A library to simplify discord.py",
+    description="A library to simplify disnake",
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
     url=DOCS,
