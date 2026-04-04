@@ -61,7 +61,7 @@ class ListScroller(disnake.ui.View):
             if ls == self:
                 list_scrollers[self.guild_id].pop(i)
 
-    def on_timeout(self) -> None:
+    async def on_timeout(self) -> None:
         self.clear_data()
 
 
