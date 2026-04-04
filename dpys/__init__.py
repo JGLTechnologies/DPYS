@@ -823,9 +823,8 @@ class warnings:
                         reason=f"You have received {warnings_number} warning(s)."
                     )
                 except (discord.Forbidden, discord.HTTPException) as e:
-                    with contextlib.suppress(Exception):
-                        if msg is not None:
-                            await msg.delete()
+                    if msg is not None:
+                        await msg.delete()
                     raise e
                 time = datetime.datetime.now() + datetime.timedelta(seconds=time)
                 async with db.execute(
@@ -882,9 +881,8 @@ class warnings:
                         reason=f"You have received {warnings_number} warning(s)."
                     )
                 except (discord.Forbidden, discord.HTTPException) as e:
-                    with contextlib.suppress(Exception):
-                        if msg is not None:
-                            await msg.delete()
+                    if msg is not None:
+                        await msg.delete()
                     raise e
                 return
             if punishments[warnings_number].punishment == "kick":
@@ -894,9 +892,8 @@ class warnings:
                         reason=f"You have received {warnings_number} warning(s)."
                     )
                 except (discord.Forbidden, discord.HTTPException) as e:
-                    with contextlib.suppress(Exception):
-                        if msg is not None:
-                            await msg.delete()
+                    if msg is not None:
+                        await msg.delete()
                     raise e
                 return
             if punishments[warnings_number].punishment == "mute":
