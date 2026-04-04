@@ -816,9 +816,7 @@ class warnings:
             return
         if punishments[warnings_number].duration is not None:
             if punishments[warnings_number].punishment == "temp_ban":
-                msg = await before(
-                    warnings_number, punishments[warnings_number], member
-                )
+                msg = await before(warnings_number, punishments[warnings_number], member) if before is not None else None
                 time = punishments[warnings_number].duration
                 try:
                     await member.ban(
@@ -826,7 +824,8 @@ class warnings:
                     )
                 except (discord.Forbidden, discord.HTTPException) as e:
                     with contextlib.suppress(Exception):
-                        await msg.delete()
+                        if msg is not None:
+                            await msg.delete()
                     raise e
                 time = datetime.datetime.now() + datetime.timedelta(seconds=time)
                 async with db.execute(
@@ -864,40 +863,40 @@ class warnings:
                     ):
                         pass
                     await db.commit()
-                    await before(warnings_number, punishments[warnings_number], member)
+                    if before is not None:
+                        await before(warnings_number, punishments[warnings_number], member)
             else:
                 time = punishments[warnings_number].duration
                 await member.timeout(
                     reason=f"You have received {warnings_number} warning(s).",
                     duration=time,
                 )
-                await before(warnings_number, punishments[warnings_number], member)
+                if before is not None:
+                    await before(warnings_number, punishments[warnings_number], member)
                 return
         else:
             if punishments[warnings_number].punishment == "ban":
-                msg = await before(
-                    warnings_number, punishments[warnings_number], member
-                )
+                msg = await before(warnings_number, punishments[warnings_number], member) if before is not None else None
                 try:
                     await member.ban(
                         reason=f"You have received {warnings_number} warning(s)."
                     )
                 except (discord.Forbidden, discord.HTTPException) as e:
                     with contextlib.suppress(Exception):
-                        await msg.delete()
+                        if msg is not None:
+                            await msg.delete()
                     raise e
                 return
             if punishments[warnings_number].punishment == "kick":
-                msg = await before(
-                    warnings_number, punishments[warnings_number], member
-                )
+                msg = await before(warnings_number, punishments[warnings_number], member) if before is not None else None
                 try:
                     await member.kick(
                         reason=f"You have received {warnings_number} warning(s)."
                     )
                 except (discord.Forbidden, discord.HTTPException) as e:
                     with contextlib.suppress(Exception):
-                        await msg.delete()
+                        if msg is not None:
+                            await msg.delete()
                     raise e
                 return
             if punishments[warnings_number].punishment == "mute":
@@ -915,7 +914,8 @@ class warnings:
                     voice_channel=None,
                 )
                 await mute_on_join.mute_add(inter.guild, member)
-                await before(warnings_number, punishments[warnings_number], member)
+                if before is not None:
+                    await before(warnings_number, punishments[warnings_number], member)
 
     @staticmethod
     async def temp_mute_loop(
