@@ -1006,11 +1006,11 @@ class warnings:
         with contextlib.suppress(sqlite3.Error):
             async with db.execute("SELECT id,expires FROM warnings") as cursor:
                 async for entry in cursor:
-                    id, expires = entry
+                    warning_id, expires = entry
                     if expires == -1:
                         continue
                     if time.time() >= expires:
-                        async with db.execute("DELETE FROM warnings WHERE id=?", (id,)):
+                        async with db.execute("DELETE FROM warnings WHERE id=?", (warning_id,)):
                             pass
                 await db.commit()
 
