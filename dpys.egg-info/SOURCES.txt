@@ -2,7 +2,13 @@ LICENSE
 README.md
 setup.py
 dpys/__init__.py
+dpys/admin.py
+dpys/curse.py
+dpys/misc.py
+dpys/mute_on_join.py
+dpys/rr.py
 dpys/utils.py
+dpys/warnings.py
 dpys.egg-info/PKG-INFO
 dpys.egg-info/SOURCES.txt
 dpys.egg-info/dependency_links.txt

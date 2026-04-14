@@ -114,10 +114,10 @@ async def rrclear(inter: disnake.ApplicationCommandInteraction, id: str = comman
     if id == "all":
         await dpys.rr.clear_all(inter)
     else:
-        await dpys.rr.clear_one(inter, int(id))
+        await dpys.rr.clear_one(inter, id)
 
 
-# Removes data for a reaction role when its message is deleted. Does not work with channel.purge(). For that you need dpys.rr.clear_on_raw_bulk_message_delete()
+# Removes data for a reaction role when its message is deleted. Does not work with channel.purge(). For that you need dpys.rr.clear_on_bulk_message_delete()
 @bot.listen("on_message_delete")
 async def rr_clear_on_message_delete(message):
     await dpys.rr.clear_on_message_delete(message)
@@ -138,7 +138,7 @@ async def rr_clear_on_thread_delete(thread):
 # Removes data for a reaction role when its message is deleted in channel.purge()
 @bot.listen("on_raw_bulk_message_delete")
 async def rr_clear_on_raw_bulk_message_delete(payload):
-    await dpys.rr.clear_on_raw_bulk_message_delete(payload)
+    await dpys.rr.clear_on_bulk_message_delete(payload)
 
 
 # Clears all DPYS data for a guild when it is removed
@@ -215,13 +215,13 @@ async def softban(inter, member: disnake.Member = commands.Param(), reason: str 
 Unban:
 
 ```python
-async def unban(inter: ApplicationCommandInteraction, member: typing.Union[str, int], msg: str = None) -> bool:
+async def unban(inter: ApplicationCommandInteraction, member: disnake.User, msg: str = None) -> bool:
 ```
 
 ```python
 @bot.slash_command(name="unban")
 @commands.has_permissions(ban_members=True)
-async def unban(inter, member: string = commands.Param()):
+async def unban(inter, member: disnake.User = commands.Param()):
     await dpys.admin.unban(inter, member)
 ```
 
@@ -418,7 +418,7 @@ Clear Reaction Role command:
 async def clear_all(inter: disnake.ApplicationCommandInteraction) -> None
 
 
-async def clear_one(inter: disnake.ApplicationCommandInteraction, message_id: int) -> None
+async def clear_one(inter: disnake.ApplicationCommandInteraction, message_id: int | str) -> None
 ```
 
 ```python
@@ -570,7 +570,7 @@ Warnings:
 ```python
 async def warnings(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, number: int = 0) -> None
 ```
-The number is what warning you want to see. Set it to 0 to see the 5 most recent warnings.
+The number is what warning you want to see. Set it to 0 to see the first 5 warnings.
 ```python
 @bot.slash_command(name="warnings")
 async def warnings(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param()):

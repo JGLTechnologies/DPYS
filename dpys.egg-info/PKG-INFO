@@ -1,19 +1,32 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: dpys
-Version: 5.6.3
+Version: 5.6.4
 Summary: A library to simplify discord.py
 Home-page: https://jgltechnologies.com/dpys
 Author: George Luca
 Author-email: fixingg@gmail.com
 License: MIT
 Keywords: discord
-Platform: UNKNOWN
 Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python :: 3
 Description-Content-Type: text/markdown
 License-File: LICENSE
+Requires-Dist: aiosqlite
+Requires-Dist: aiohttp
+Requires-Dist: disnake
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: keywords
+Dynamic: license
+Dynamic: license-file
+Dynamic: requires-dist
+Dynamic: summary
 
 <a href="https://jgltechnologies.com/ddiscord">
 <img src="https://discord.com/api/guilds/844418702430175272/embed.png">
@@ -131,10 +144,10 @@ async def rrclear(inter: disnake.ApplicationCommandInteraction, id: str = comman
     if id == "all":
         await dpys.rr.clear_all(inter)
     else:
-        await dpys.rr.clear_one(inter, int(id))
+        await dpys.rr.clear_one(inter, id)
 
 
-# Removes data for a reaction role when its message is deleted. Does not work with channel.purge(). For that you need dpys.rr.clear_on_raw_bulk_message_delete()
+# Removes data for a reaction role when its message is deleted. Does not work with channel.purge(). For that you need dpys.rr.clear_on_bulk_message_delete()
 @bot.listen("on_message_delete")
 async def rr_clear_on_message_delete(message):
     await dpys.rr.clear_on_message_delete(message)
@@ -155,7 +168,7 @@ async def rr_clear_on_thread_delete(thread):
 # Removes data for a reaction role when its message is deleted in channel.purge()
 @bot.listen("on_raw_bulk_message_delete")
 async def rr_clear_on_raw_bulk_message_delete(payload):
-    await dpys.rr.clear_on_raw_bulk_message_delete(payload)
+    await dpys.rr.clear_on_bulk_message_delete(payload)
 
 
 # Clears all DPYS data for a guild when it is removed
@@ -232,13 +245,13 @@ async def softban(inter, member: disnake.Member = commands.Param(), reason: str 
 Unban:
 
 ```python
-async def unban(inter: ApplicationCommandInteraction, member: typing.Union[str, int], msg: str = None) -> bool:
+async def unban(inter: ApplicationCommandInteraction, member: disnake.User, msg: str = None) -> bool:
 ```
 
 ```python
 @bot.slash_command(name="unban")
 @commands.has_permissions(ban_members=True)
-async def unban(inter, member: string = commands.Param()):
+async def unban(inter, member: disnake.User = commands.Param()):
     await dpys.admin.unban(inter, member)
 ```
 
@@ -435,7 +448,7 @@ Clear Reaction Role command:
 async def clear_all(inter: disnake.ApplicationCommandInteraction) -> None
 
 
-async def clear_one(inter: disnake.ApplicationCommandInteraction, message_id: int) -> None
+async def clear_one(inter: disnake.ApplicationCommandInteraction, message_id: int | str) -> None
 ```
 
 ```python
@@ -587,7 +600,7 @@ Warnings:
 ```python
 async def warnings(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, number: int = 0) -> None
 ```
-The number is what warning you want to see. Set it to 0 to see the 5 most recent warnings.
+The number is what warning you want to see. Set it to 0 to see the first 5 warnings.
 ```python
 @bot.slash_command(name="warnings")
 async def warnings(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param()):
@@ -671,7 +684,5 @@ Clear DPYS Data On Guild Remove:
 async def clear_dpys_data(guild: disnake.Guild):
     await dpys.misc.clear_data_on_guild_remove(guild)
 ```
-
-
 
 
