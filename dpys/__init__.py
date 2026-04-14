@@ -34,6 +34,7 @@ from .curse import curse
 from .misc import misc
 from .mute_on_join import mute_on_join
 from .rr import rr
+from .utils import BotData, DiscordUtils, GuildData
 from .warnings import warnings
 
 COLOR = None
@@ -42,7 +43,7 @@ warnings_db: aiosqlite.Connection | None = None
 muted_db: aiosqlite.Connection | None = None
 rr_db: aiosqlite.Connection | None = None
 curse_db: aiosqlite.Connection | None = None
-version = "5.6.4"
+version = "5.6.5"
 
 
 def display_name(user: discord.Member | discord.User) -> str:
