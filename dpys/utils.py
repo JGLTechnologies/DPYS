@@ -35,8 +35,8 @@ class ListScroller(disnake.ui.View):
         self.pos = 0
         self.next_lock = asyncio.Semaphore(1)
         self.prev_lock = asyncio.Semaphore(1)
-        self.next = Next(label="Next", style=disnake.ButtonStyle.grey, custom_id=f"next{id(self)}")
-        self.prev = Prev(label="Prev", style=disnake.ButtonStyle.grey, custom_id=f"prev{id(self)}")
+        self.next = Next(label="Next", style=disnake.ButtonStyle.secondary, custom_id=f"next{id(self)}")
+        self.prev = Prev(label="Prev", style=disnake.ButtonStyle.secondary, custom_id=f"prev{id(self)}")
         list_scrollers[inter.guild.id].append(self)
 
     async def reset(self):

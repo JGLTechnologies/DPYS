@@ -118,7 +118,7 @@ async def rrclear(inter: disnake.ApplicationCommandInteraction, id: str = comman
     if id == "all":
         await dpys.rr.clear_all(inter)
     else:
-        await dpys.rr.clear_one(inter, int(id))
+        await dpys.rr.clear_one(inter, id)
 
 
 # Removes data for a reaction role when its message is deleted. Does not work with channel.purge(). For that you need dpys.rr.clear_on_bulk_message_delete()
@@ -142,7 +142,7 @@ async def rr_clear_on_thread_delete(thread):
 # Removes data for a reaction role when its message is deleted in channel.purge()
 @bot.listen("on_raw_bulk_message_delete")
 async def rr_clear_on_raw_bulk_message_delete(payload):
-    await dpys.rr.clear_on_raw_bulk_message_delete(payload)
+    await dpys.rr.clear_on_bulk_message_delete(payload)
 
 
 # Clears all DPYS data for a guild when it is removed
@@ -426,7 +426,7 @@ Clear Reaction Role command:
 async def clear_all(inter: disnake.ApplicationCommandInteraction) -> None
 
 
-async def clear_one(inter: disnake.ApplicationCommandInteraction, message_id: int) -> None
+async def clear_one(inter: disnake.ApplicationCommandInteraction, message_id: int | str) -> None
 ```
 
 ```python

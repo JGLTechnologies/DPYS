@@ -22,35 +22,32 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-import contextlib
-import math
 import os
-import sqlite3
-import time
-from typing import *
-import typing
+
+import aiosqlite
 import disnake
 import disnake as discord
-import datetime
-import aiosqlite
 from disnake.ext import commands
-from disnake import ApplicationCommandInteraction
-from dpys.utils import ListScroller
-import asyncio
 
-from .utils import GuildData, get_discord_date
+from .admin import admin
+from .curse import curse
+from .misc import misc
+from .mute_on_join import mute_on_join
+from .rr import rr
+from .utils import BotData, DiscordUtils, GuildData
+from .warnings import warnings
 
 COLOR = None
-version = "5.6.3"
 EPHEMERAL = True
-warnings_db: aiosqlite.Connection
-muted_db: aiosqlite.Connection
-rr_db: aiosqlite.Connection
-curse_db: aiosqlite.Connection
+warnings_db: aiosqlite.Connection | None = None
+muted_db: aiosqlite.Connection | None = None
+rr_db: aiosqlite.Connection | None = None
+curse_db: aiosqlite.Connection | None = None
+version = "5.6.5"
 
-print(
-    "We recommend that you read https://jgltechnologies.com/dpys before you use DPYS."
-)
+
+def display_name(user: discord.Member | discord.User) -> str:
+    return getattr(user, "display_name", user.name)
 
 
 async def setup(
