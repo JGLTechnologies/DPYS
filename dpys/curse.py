@@ -1,4 +1,4 @@
-import typing
+import re
 
 import disnake as discord
 from disnake import ApplicationCommandInteraction
@@ -7,123 +7,121 @@ import dpys
 from .utils import GuildData
 
 
+def _parse_words(value: str) -> set[str]:
+    return {
+        re.sub(r"\s+", " ", entry.strip().casefold())
+        for entry in value.split(",")
+        if entry.strip()
+    }
+
+
+def _contains_banned_word(content: str, banned_words: set[str]) -> bool:
+    normalized = re.sub(r"\s+", " ", content.casefold())
+    return any(
+        re.search(rf"(?<!\w){re.escape(word)}(?!\w)", normalized)
+        for word in banned_words
+        if word
+    )
+
+
+# noinspection PyPep8Naming,SqlResolve,SqlNoDataSourceInspection
 class curse:
     @staticmethod
     async def add_banned_word(inter: ApplicationCommandInteraction, word: str) -> None:
-        word = word.lower()
+        if inter.guild is None:
+            raise ValueError("This helper can only be used in a guild")
         guildid = str(inter.guild.id)
-        db = dpys.curse_db
-        async with db.execute(
-            """CREATE TABLE if NOT EXISTS curses(
-        curse TEXT,
-        guild TEXT,
-        PRIMARY KEY (curse,guild)
-        )"""
-        ):
-            pass
-        await db.commit()
-        words = set(word.replace(" ", "").split(","))
+        db = dpys.get_database("curse")
+        words = _parse_words(word)
+        if not words:
+            await inter.send("Provide at least one word.", ephemeral=dpys.EPHEMERAL)
+            return
         curses = await GuildData.curse_set(inter.guild.id, db)
-        for entry in words:
-            if entry in curses:
-                await inter.send(
-                    f"{entry} is already banned.", ephemeral=dpys.EPHEMERAL
-                )
-                return
-        for entry in words:
-            async with db.execute(
-                "INSERT INTO curses (curse,guild) VALUES (?,?)", (entry, guildid)
-            ):
-                pass
+        new_words = words - curses
+        if not new_words:
+            message = "Those words are already banned." if len(words) > 1 else "That word is already banned."
+            await inter.send(message, ephemeral=dpys.EPHEMERAL)
+            return
+        await db.executemany(
+            "INSERT OR IGNORE INTO curses (curse,guild) VALUES (?,?)",
+            [(entry, guildid) for entry in sorted(new_words)],
+        )
         await db.commit()
-        await inter.send("Those words have been banned.", ephemeral=dpys.EPHEMERAL)
+        message = "Those words have been banned." if len(new_words) > 1 else "That word has been banned."
+        await inter.send(message, ephemeral=dpys.EPHEMERAL)
 
     @staticmethod
     async def remove_banned_word(
-        inter: ApplicationCommandInteraction, word: str
+            inter: ApplicationCommandInteraction, word: str
     ) -> None:
-        db = dpys.curse_db
+        if inter.guild is None:
+            raise ValueError("This helper can only be used in a guild")
+        db = dpys.get_database("curse")
         guildid = str(inter.guild.id)
-        try:
-            word = word.lower().replace(" ", "").split(",")
-            async with db.execute(
-                "SELECT curse FROM curses WHERE guild = ?", (guildid,)
-            ) as cursor:
-                in_db = False
-                async for entry in cursor:
-                    curse_word = entry[0]
-                    for item in word:
-                        if item == curse_word:
-                            in_db = True
-            if not in_db:
-                msg = "Those words are not banned." if len(word) > 1 else "That word is not banned."
-                await inter.send(msg, ephemeral=dpys.EPHEMERAL)
-                return
-            for item in word:
-                async with db.execute(
-                    "DELETE FROM curses WHERE curse = ? and guild = ?", (item, guildid)
-                ):
-                    pass
-            await db.commit()
-            await inter.send(
-                "Those words have been unbanned.", ephemeral=dpys.EPHEMERAL
-            )
-        except Exception:
-            await inter.send("Those words are not banned.", ephemeral=dpys.EPHEMERAL)
+        words = _parse_words(word)
+        if not words:
+            await inter.send("Provide at least one word.", ephemeral=dpys.EPHEMERAL)
+            return
+        existing = await GuildData.curse_set(inter.guild.id, db)
+        removable = words & existing
+        if not removable:
+            message = "Those words are not banned." if len(words) > 1 else "That word is not banned."
+            await inter.send(message, ephemeral=dpys.EPHEMERAL)
+            return
+        await db.executemany(
+            "DELETE FROM curses WHERE curse = ? and guild = ?",
+            [(entry, guildid) for entry in sorted(removable)],
+        )
+        await db.commit()
+        message = "Those words have been unbanned." if len(removable) > 1 else "That word has been unbanned."
+        await inter.send(message, ephemeral=dpys.EPHEMERAL)
 
     @staticmethod
     async def message_filter(
-        message: discord.Message, exempt_roles: typing.Optional[typing.List[int]] = None
+            message: discord.Message, exempt_roles: list[int] | None = None
     ) -> None:
         if (
-            message.author.bot
-            or message.guild is None
-            or message.author.guild_permissions.administrator
+                message.author.bot
+                or message.guild is None
+                or not isinstance(message.author, discord.Member)
+                or message.author.guild_permissions.administrator
         ):
             return
-        guildid = str(message.guild.id)
         if exempt_roles is not None:
             for role_id in exempt_roles:
                 role = message.guild.get_role(role_id)
-                if role is not None and (
-                    role in message.author.roles
-                    or message.author.top_role.position > role.position
-                ):
+                if role is not None and role in message.author.roles:
                     return
+        db = dpys.get_database("curse")
+        banned_words = await GuildData.curse_set(message.guild.id, db)
+        if not _contains_banned_word(message.content, banned_words):
+            return
         try:
-            messagecontent = message.content.lower()
-            db = dpys.curse_db
-            async with db.execute(
-                "SELECT curse FROM curses WHERE guild = ?", (guildid,)
-            ) as cursor:
-                async for entry in cursor:
-                    if entry[0] in messagecontent.split():
-                        await message.delete()
-                        await message.channel.send(
-                            "Do not say that here!", delete_after=5
-                        )
-        except Exception:
+            await message.delete()
+            await message.channel.send("Do not say that here!", delete_after=5)
+        except (discord.Forbidden, discord.HTTPException):
             return
 
     @staticmethod
     async def message_edit_filter(
-        after: discord.Message, exempt_roles: typing.Optional[typing.List[int]] = None
+            after: discord.Message, exempt_roles: list[int] | None = None
     ) -> None:
         await curse.message_filter(after, exempt_roles)
 
     @staticmethod
     async def clear_words(inter: ApplicationCommandInteraction) -> None:
+        if inter.guild is None:
+            raise ValueError("This helper can only be used in a guild")
         guildid = str(inter.guild.id)
-        try:
-            db = dpys.curse_db
-            async with db.execute("DELETE FROM curses WHERE guild = ?", (guildid,)):
-                pass
-            await db.commit()
-            await inter.send(
-                "Unbanned all words from this server.", ephemeral=dpys.EPHEMERAL
-            )
-        except Exception:
-            await inter.send(
-                "There are no banned words on this server.",
-                ephemeral=dpys.EPHEMERAL,
-            )
+        db = dpys.get_database("curse")
+        async with db.execute(
+                "DELETE FROM curses WHERE guild = ?", (guildid,)
+        ) as cursor:
+            deleted = cursor.rowcount
+        await db.commit()
+        message = (
+            "Unbanned all words from this server."
+            if deleted
+            else "There are no banned words on this server."
+        )
+        await inter.send(message, ephemeral=dpys.EPHEMERAL)

@@ -1,2 +1,8 @@
 update.py
 /$HOME/
+.idea/
+*.egg-info/
+__pycache__/
+*.py[cod]
+build/
+dist/

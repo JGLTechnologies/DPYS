@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 
 def get_long_description():
@@ -7,9 +7,9 @@ def get_long_description():
 
 
 REQUIREMENTS = [
-    "aiosqlite",
-    "aiohttp",
-    "disnake",
+    "aiosqlite>=0.17,<1",
+    "aiohttp>=3.8,<4",
+    "disnake>=2.12,<3",
 ]
 DOCS = "https://jgltechnologies.com/dpys"
 VERSION = "5.6.5"
@@ -17,7 +17,6 @@ VERSION = "5.6.5"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
 ]
 
@@ -33,6 +32,7 @@ setup(
     license="MIT",
     classifiers=classifiers,
     keywords="discord",
-    packages=find_packages(),
+    packages=find_packages(exclude=("tests", "tests.*")),
     install_requires=REQUIREMENTS,
+    python_requires=">=3.10",
 )
