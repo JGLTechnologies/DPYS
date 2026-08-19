@@ -42,8 +42,12 @@ from disnake.ext import commands
 bot = commands.AutoShardedBot(command_prefix="!")
 TOKEN = "Your Token"
 
-bot.loop.create_task(dpys.setup(bot, "database directory"))
-bot.run()
+async def main():
+    async with bot:
+        await dpys.setup(bot, "database directory")
+        await bot.start(TOKEN)
+
+asyncio.run(main())
 ```
 
 <br>
@@ -147,8 +151,12 @@ async def clear_on_guild_remove(guild):
     await dpys.misc.clear_data_on_guild_remove(guild)
 
 
-bot.loop.create_task(dpys.setup(bot, DIR))
-bot.run(TOKEN)
+async def main():
+    async with bot:
+        await dpys.setup(bot, DIR)
+        await bot.start(TOKEN)
+
+asyncio.run(main())
 ```
 
 <br>
@@ -298,7 +306,7 @@ async def mute_add(guild: disnake.Guild, member: disnake.Member) -> None
 
 ```python
 @bot.slash_command(name="mute")
-async def mute(inter, member: dicord.Member = commands.Param(), reason: str = commands.Param(default=None)):
+async def mute(inter, member: disnake.Member = commands.Param(), reason: str = commands.Param(default=None)):
     await dpys.admin.mute(inter, member, MUTE_ROLE_ID, MUTE_REMOVE_ROLE_ID, reason)
     await dpys.mute_on_join.mute_add(inter.guild, member)
 ```
@@ -313,7 +321,7 @@ async def mute_remove(guild: disnake.Guild, member: disnake.Member) -> None
 
 ```python
 @bot.slash_command(name="unmute")
-async def unmute(inter, member: dicord.Member = commands.Param()):
+async def unmute(inter, member: disnake.Member = commands.Param()):
     await dpys.admin.unmute(inter, member, MUTE_ROLE_ID, MUTE_REMOVE_ROLE_ID)
     await dpys.mute_on_join.mute_remove(inter.guild, member)
 ```
@@ -329,7 +337,7 @@ async def mute_on_join(member: disnake.Member, role_add: int, role_remove: Optio
 ```python
 @bot.listen("on_member_join")
 async def mute_on_join(member: disnake.Member):
-    await dpys.mute_on_join.mute_on_join(member, MUTE_ROLE_ID, MUTE_REMOVE_ROLE)
+    await dpys.mute_on_join.mute_on_join(member, MUTE_ROLE_ID, MUTE_REMOVE_ROLE_ID)
 ```
 
 <br>
@@ -462,7 +470,7 @@ async def rr_clear_on_thread_delete(thread: disnake.Thread):
 Warn:
 
 ```python
-async def warn(inter: ApplicationCommandInteraction, member: discord.Member,
+async def warn(inter: ApplicationCommandInteraction, member: disnake.Member,
                    reason: typing.Optional[str] = None, expires: Optional[int] = -1) -> None:
 ```
 
@@ -471,7 +479,7 @@ async def warn(inter: ApplicationCommandInteraction, member: discord.Member,
 async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param(),
                reason: str = commands.Param(default=None)):
     # Warning will expire in 1 day
-    await dpys.warnings.warn(inter, member, reason, time.now() + 86400)
+    await dpys.warnings.warn(inter, member, reason, time.time() + 86400)
 ```
 
 <br>
@@ -479,7 +487,7 @@ async def warn(inter: disnake.ApplicationCommandInteraction, member: disnake.Mem
 Unwarn:
 
 ```python
-async def unwarn(inter: disnake.ApplicationCommandInteraction, member, dir, number: typing.Union[int, str]) -> bool
+async def unwarn(inter: disnake.ApplicationCommandInteraction, member, number: typing.Union[int, str]) -> bool
 ```
 
 ```python
@@ -499,7 +507,7 @@ async def punish(inter: ApplicationCommandInteraction, member: discord.Member,
                  punishments: typing.Mapping[int, Punishment],
                  add_role: typing.Optional[int] = None, remove_role: typing.Optional[int] = None,
                  before: Optional[
-                     Callable[[int, Punishment, discord.Member], Awaitable[Optional[Member]]]] = None) -> None:
+                     Callable[[int, Punishment, disnake.Member], Awaitable[Optional[disnake.Message]]]] = None) -> None:
 ```
 
 ```python
@@ -547,7 +555,7 @@ class DpysLoops(commands.Cog):
         await dpys.warnings.expire_loop()
         
     @dpys_expire.before_loop
-    async def before_dpys_tempmute_loop(self):
+    async def before_dpys_expire(self):
         await self.bot.wait_until_ready()
 
     @tasks.loop(seconds=1)
@@ -570,7 +578,7 @@ Warnings:
 ```python
 async def warnings(inter: disnake.ApplicationCommandInteraction, member: disnake.Member, number: int = 0) -> None
 ```
-The number is what warning you want to see. Set it to 0 to see the first 5 warnings.
+The number is what warning you want to see. Set it to 0 to see all warnings paginated 5 per page.
 ```python
 @bot.slash_command(name="warnings")
 async def warnings(inter: disnake.ApplicationCommandInteraction, member: disnake.Member = commands.Param()):
